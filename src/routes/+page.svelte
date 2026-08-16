@@ -230,58 +230,65 @@
 			<div class="grid grid-cols-2 gap-px bg-white/10 p-px">
 				<button
 					type="button"
-					class={`min-h-24 border-0 px-2 py-2 text-left transition ${
+					class={`border-0 p-0 text-left transition ${
 						form.youId ? 'bg-[#111111]' : 'bg-[#0b0b0b]'
 					}`}
 					onclick={() => openDrawer('you')}
 				>
-					<p class="text-[10px] font-black uppercase tracking-[0.4em] text-red-500">Me</p>
-					<div class="mt-2 flex items-end gap-2">
-						{#if selectedFighter('you')}
-							<img
-								src={selectedFighter('you')?.image}
-								alt={selectedFighter('you')?.name ?? 'Your fighter'}
-								class="h-16 w-16 border border-white/20 object-cover"
-							/>
-						{/if}
-						<div class="pb-1">
-							<p class="text-[1.1rem] font-black leading-none text-white">
-								{selectedFighter('you')?.name ?? 'Pick fighter'}
-							</p>
-							<p class="mt-1 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-zinc-500">
-								Tap to change
-							</p>
+					<div class="flex min-h-36 flex-col">
+						<div class="flex-1 overflow-hidden border-b border-white/10 bg-[#050505]">
+							{#if selectedFighter('you')}
+								<img
+									src={selectedFighter('you')?.image}
+									alt={selectedFighter('you')?.name ?? 'Your fighter'}
+									class="h-full w-full object-contain object-center scale-[0.92]"
+								/>
+							{/if}
+						</div>
+						<div class="flex items-center justify-between gap-2 px-3 py-2">
+							<div>
+								<p class="text-[10px] font-black uppercase tracking-[0.4em] text-red-500">Me</p>
+								<p class="mt-1 text-[1rem] font-black leading-none text-white">
+									{selectedFighter('you')?.name ?? 'Pick fighter'}
+								</p>
+							</div>
+							<span class="text-xl font-black leading-none text-zinc-400">▾</span>
 						</div>
 					</div>
 				</button>
 
 				<button
 					type="button"
-					class={`min-h-24 border-0 px-2 py-2 text-left transition ${
+					class={`border-0 p-0 text-left transition ${
 						form.opponentId ? 'bg-[#111111]' : 'bg-[#0b0b0b]'
 					}`}
 					onclick={() => openDrawer('opponent')}
 				>
-					<p class="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">Opponent</p>
-					<div class="mt-2 flex items-end gap-2">
-						{#if selectedFighter('opponent')}
-							<img
-								src={selectedFighter('opponent')?.image}
-								alt={selectedFighter('opponent')?.name ?? 'Opponent fighter'}
-								class="h-16 w-16 border border-white/20 object-cover"
-							/>
-						{/if}
-						<div class="pb-1">
-							<p class="text-[1.1rem] font-black leading-none text-white">
-								{selectedFighter('opponent')?.name ?? 'Pick fighter'}
-							</p>
-							<p class="mt-1 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-zinc-500">
-								Tap to change
-							</p>
+					<div class="flex min-h-36 flex-col">
+						<div class="flex-1 overflow-hidden border-b border-white/10 bg-[#050505]">
+							{#if selectedFighter('opponent')}
+								<img
+									src={selectedFighter('opponent')?.image}
+									alt={selectedFighter('opponent')?.name ?? 'Opponent fighter'}
+									class="h-full w-full object-contain object-center scale-[0.92]"
+								/>
+							{/if}
+						</div>
+						<div class="flex items-center justify-between gap-2 px-3 py-2">
+							<div>
+								<p class="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">Opponent</p>
+								<p class="mt-1 text-[1rem] font-black leading-none text-white">
+									{selectedFighter('opponent')?.name ?? 'Pick fighter'}
+								</p>
+							</div>
+							<span class="text-xl font-black leading-none text-zinc-400">▾</span>
 						</div>
 					</div>
 				</button>
 			</div>
+			<p class="mt-1 text-center text-[0.65rem] font-bold uppercase tracking-[0.22em] text-zinc-500">
+				Tap a fighter to change
+			</p>
 
 			<div class="my-2 grid grid-cols-3 gap-px bg-white/10 p-px">
 				{#each [
@@ -470,11 +477,11 @@
 			/>
 
 			<div class="mt-3 max-h-[62dvh] overflow-y-auto pb-2">
-				<div class="grid grid-cols-3 gap-2">
+				<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
 					{#each filteredFighters as fighter}
 						<button
 							type="button"
-							class={`border p-2 text-center transition ${
+							class={`border p-1.5 text-left transition ${
 								(fighter.id === form.youId && activeSlot === 'you') ||
 								(fighter.id === form.opponentId && activeSlot === 'opponent')
 									? 'border-red-500 bg-[#151515]'
@@ -485,9 +492,9 @@
 							<img
 								src={fighter.image}
 								alt={fighter.name}
-								class="mx-auto h-14 w-14 border-2 border-white object-cover"
+								class="aspect-[16/9] w-full border border-white/20 bg-[#050505] object-contain object-center scale-[0.95]"
 							/>
-							<p class="mt-2 text-[12px] font-bold text-white">{fighter.name}</p>
+							<p class="mt-1.5 px-1 pb-1 text-[12px] font-bold leading-tight text-white">{fighter.name}</p>
 						</button>
 					{/each}
 				</div>

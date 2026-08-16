@@ -30,51 +30,111 @@ export type ResultFilter = 'all' | Result;
 export const STORAGE_KEY = 'smash-log-form-v1';
 export const RECORDS_KEY = 'smash-log-records-v1';
 
-const fighterImages = import.meta.glob('/node_modules/smash-ultimate-assets/portraits/small/*.png', {
-	eager: true,
-	import: 'default'
-}) as Record<string, string>;
-
-const fighterLabelOverrides: Record<string, string> = {
-	bayonetta: 'Bayonetta',
-	bowser_jr: 'Bowser Jr.',
-	captain_falcon: 'Captain Falcon',
-	dark_pit: 'Dark Pit',
-	dark_samus: 'Dark Samus',
-	diddy_kong: 'Diddy Kong',
-	donkey_kong: 'Donkey Kong',
-	dr_mario: 'Dr. Mario',
-	duck_hunt: 'Duck Hunt',
-	ice_climbers: 'Ice Climbers',
-	king_dedede: 'King Dedede',
-	king_k_rool: 'King K. Rool',
-	little_mac: 'Little Mac',
-	mii_brawler: 'Mii Brawler',
-	mii_gunner: 'Mii Gunner',
-	mii_swordfighter: 'Mii Swordfighter',
-	meta_knight: 'Meta Knight',
-	mr_game_and_watch: 'Mr. Game & Watch',
-	pac_man: 'Pac-Man',
-	piranha_plant: 'Piranha Plant',
-	pokemon_trainer: 'Pokémon Trainer',
-	rosalina_and_luma: 'Rosalina & Luma',
-	rob: 'R.O.B.',
-	wii_fit_trainer: 'Wii Fit Trainer',
-	zero_suit_samus: 'Zero Suit Samus'
+type RosterEntry = {
+	id: string;
+	name: string;
+	codeName: string;
 };
 
-export const fighters: Fighter[] = Object.entries(fighterImages)
-	.map(([path, image]) => {
-		const slug = path.split('/').pop()?.replace('.png', '') ?? '';
-		const name =
-			fighterLabelOverrides[slug] ??
-			slug
-				.split('_')
-				.map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-				.join(' ');
+const roster: RosterEntry[] = [
+	{ id: 'mario', name: 'Mario', codeName: 'mario' },
+	{ id: 'donkey_kong', name: 'Donkey Kong', codeName: 'donkey_kong' },
+	{ id: 'link', name: 'Link', codeName: 'link' },
+	{ id: 'samus', name: 'Samus', codeName: 'samus' },
+	{ id: 'dark_samus', name: 'Dark Samus', codeName: 'dark_samus' },
+	{ id: 'yoshi', name: 'Yoshi', codeName: 'yoshi' },
+	{ id: 'kirby', name: 'Kirby', codeName: 'kirby' },
+	{ id: 'fox', name: 'Fox', codeName: 'fox' },
+	{ id: 'pikachu', name: 'Pikachu', codeName: 'pikachu' },
+	{ id: 'luigi', name: 'Luigi', codeName: 'luigi' },
+	{ id: 'ness', name: 'Ness', codeName: 'ness' },
+	{ id: 'captain_falcon', name: 'Captain Falcon', codeName: 'captain_falcon' },
+	{ id: 'jigglypuff', name: 'Jigglypuff', codeName: 'jigglypuff' },
+	{ id: 'peach', name: 'Peach', codeName: 'peach' },
+	{ id: 'daisy', name: 'Daisy', codeName: 'daisy' },
+	{ id: 'bowser', name: 'Bowser', codeName: 'bowser' },
+	{ id: 'ice_climbers', name: 'Ice Climbers', codeName: 'ice_climbers' },
+	{ id: 'sheik', name: 'Sheik', codeName: 'sheik' },
+	{ id: 'zelda', name: 'Zelda', codeName: 'zelda' },
+	{ id: 'dr_mario', name: 'Dr. Mario', codeName: 'dr_mario' },
+	{ id: 'pichu', name: 'Pichu', codeName: 'pichu' },
+	{ id: 'falco', name: 'Falco', codeName: 'falco' },
+	{ id: 'marth', name: 'Marth', codeName: 'marth' },
+	{ id: 'lucina', name: 'Lucina', codeName: 'lucina' },
+	{ id: 'young_link', name: 'Young Link', codeName: 'young_link' },
+	{ id: 'ganondorf', name: 'Ganondorf', codeName: 'ganondorf' },
+	{ id: 'mewtwo', name: 'Mewtwo', codeName: 'mewtwo' },
+	{ id: 'roy', name: 'Roy', codeName: 'roy' },
+	{ id: 'chrom', name: 'Chrom', codeName: 'chrom' },
+	{ id: 'mr_game_and_watch', name: 'Mr. Game & Watch', codeName: 'mr_game_and_watch' },
+	{ id: 'meta_knight', name: 'Meta Knight', codeName: 'meta_knight' },
+	{ id: 'pit', name: 'Pit', codeName: 'pit' },
+	{ id: 'dark_pit', name: 'Dark Pit', codeName: 'dark_pit' },
+	{ id: 'zero_suit_samus', name: 'Zero Suit Samus', codeName: 'zero_suit_samus' },
+	{ id: 'wario', name: 'Wario', codeName: 'wario' },
+	{ id: 'snake', name: 'Snake', codeName: 'snake' },
+	{ id: 'ike', name: 'Ike', codeName: 'ike' },
+	{ id: 'pokemon_trainer', name: 'Pokemon Trainer', codeName: 'pokemon_trainer' },
+	{ id: 'sonic', name: 'Sonic', codeName: 'sonic' },
+	{ id: 'diddy_kong', name: 'Diddy Kong', codeName: 'diddy_kong' },
+	{ id: 'lucas', name: 'Lucas', codeName: 'lucas' },
+	{ id: 'lucario', name: 'Lucario', codeName: 'lucario' },
+	{ id: 'king_dedede', name: 'King Dedede', codeName: 'king_dedede' },
+	{ id: 'olimar', name: 'Olimar', codeName: 'olimar' },
+	{ id: 'rob', name: 'R.O.B.', codeName: 'rob' },
+	{ id: 'toon_link', name: 'Toon Link', codeName: 'toon_link' },
+	{ id: 'wolf', name: 'Wolf', codeName: 'wolf' },
+	{ id: 'villager', name: 'Villager', codeName: 'villager' },
+	{ id: 'mega_man', name: 'Mega Man', codeName: 'mega_man' },
+	{ id: 'wii_fit_trainer', name: 'Wii Fit Trainer', codeName: 'wii_fit_trainer' },
+	{ id: 'rosalina_and_luma', name: 'Rosalina & Luma', codeName: 'rosalina_and_luma' },
+	{ id: 'little_mac', name: 'Little Mac', codeName: 'little_mac' },
+	{ id: 'greninja', name: 'Greninja', codeName: 'greninja' },
+	{ id: 'mii_fighter', name: 'Mii Fighter', codeName: 'mii_fighter' },
+	{ id: 'palutena', name: 'Palutena', codeName: 'palutena' },
+	{ id: 'pac_man', name: 'Pac-Man', codeName: 'pac_man' },
+	{ id: 'robin', name: 'Robin', codeName: 'robin' },
+	{ id: 'shulk', name: 'Shulk', codeName: 'shulk' },
+	{ id: 'bowser_jr', name: 'Bowser Jr.', codeName: 'bowser_jr' },
+	{ id: 'duck_hunt', name: 'Duck Hunt', codeName: 'duck_hunt' },
+	{ id: 'ryu', name: 'Ryu', codeName: 'ryu' },
+	{ id: 'ken', name: 'Ken', codeName: 'ken' },
+	{ id: 'cloud', name: 'Cloud', codeName: 'cloud' },
+	{ id: 'corrin', name: 'Corrin', codeName: 'corrin' },
+	{ id: 'bayonetta', name: 'Bayonetta', codeName: 'bayonetta' },
+	{ id: 'inkling', name: 'Inkling', codeName: 'inkling' },
+	{ id: 'ridley', name: 'Ridley', codeName: 'ridley' },
+	{ id: 'simon', name: 'Simon', codeName: 'simon' },
+	{ id: 'richter', name: 'Richter', codeName: 'richter' },
+	{ id: 'king_k_rool', name: 'King K. Rool', codeName: 'king_k_rool' },
+	{ id: 'isabelle', name: 'Isabelle', codeName: 'shizue' },
+	{ id: 'incineroar', name: 'Incineroar', codeName: 'gaogaen' },
+	{ id: 'piranha_plant', name: 'Piranha Plant', codeName: 'packun_flower' },
+	{ id: 'joker', name: 'Joker', codeName: 'joker' },
+	{ id: 'hero', name: 'Hero', codeName: 'dq_hero' },
+	{ id: 'banjo_and_kazooie', name: 'Banjo & Kazooie', codeName: 'banjo_and_kazooie' },
+	{ id: 'terry', name: 'Terry', codeName: 'terry' },
+	{ id: 'byleth', name: 'Byleth', codeName: 'byleth' },
+	{ id: 'min_min', name: 'Min Min', codeName: 'minmin' },
+	{ id: 'steve', name: 'Steve / Alex', codeName: 'steve' },
+	{ id: 'sephiroth', name: 'Sephiroth', codeName: 'sephiroth' },
+	{ id: 'pyra_mythra', name: 'Pyra / Mythra', codeName: 'homura' },
+	{ id: 'kazuya', name: 'Kazuya', codeName: 'kazuya' },
+	{ id: 'sora', name: 'Sora', codeName: 'sora' }
+];
 
-		return { id: slug, name, image };
-	})
+const fighterAssetBase = 'https://www.smashbros.com/assets_v2/img/fighter/thumb_h';
+
+function fighterImageUrl(codeName: string) {
+	return `${fighterAssetBase.replace('/thumb_h', '')}/${codeName}/main.png`;
+}
+
+export const fighters: Fighter[] = roster
+	.map(({ id, name, codeName }) => ({
+		id,
+		name,
+		image: fighterImageUrl(codeName)
+	}))
 	.sort((left, right) => left.name.localeCompare(right.name));
 
 export const lossReasons = [
@@ -159,4 +219,25 @@ export function groupByFighter(records: MatchRecord[]) {
 		})
 		.filter((entry) => entry.total > 0)
 		.sort((left, right) => right.total - left.total || left.fighter.name.localeCompare(right.fighter.name));
+}
+
+let warmupPromise: Promise<void> | null = null;
+
+export function warmFighterImages() {
+	if (typeof window === 'undefined') return Promise.resolve();
+	if (warmupPromise) return warmupPromise;
+
+	warmupPromise = Promise.all(
+		fighters.map((fighter) => {
+			return new Promise<void>((resolve) => {
+				const image = new Image();
+				image.decoding = 'async';
+				image.onload = () => resolve();
+				image.onerror = () => resolve();
+				image.src = fighter.image;
+			});
+		})
+	).then(() => undefined);
+
+	return warmupPromise;
 }

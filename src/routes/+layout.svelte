@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { warmFighterImages } from '$lib/smash-log';
 	import './layout.css';
 
 	let { children } = $props();
@@ -8,6 +9,8 @@
 		if ('serviceWorker' in navigator) {
 			void navigator.serviceWorker.register('/service-worker.js');
 		}
+
+		void warmFighterImages();
 	});
 </script>
 
