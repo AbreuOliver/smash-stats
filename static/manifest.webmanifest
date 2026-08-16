@@ -1,0 +1,16 @@
+{
+	"name": "Smash Log",
+	"short_name": "Smash Log",
+	"start_url": "/",
+	"display": "standalone",
+	"background_color": "#f2f4fb",
+	"theme_color": "#0f172a",
+	"description": "Offline-first Smash Ultimate match logger.",
+	"icons": [
+		{
+			"src": "/smash-stats-icon.jpg",
+			"sizes": "1200x1200",
+			"type": "image/jpeg"
+		}
+	]
+}
