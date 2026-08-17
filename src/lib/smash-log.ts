@@ -161,7 +161,7 @@ export const defaultForm: FormState = {
 	smashMeter: false,
 	hazards: false,
 	eliteSmash: false,
-	satisfaction: 3,
+	satisfaction: 0,
 	toxic: false,
 	lossReasons: []
 };
@@ -183,6 +183,11 @@ function normalizeBoolean(value: unknown, fallback = false) {
 function normalizeLossReasons(value: unknown) {
 	if (!Array.isArray(value)) return [];
 	return value.filter((reason): reason is string => typeof reason === 'string');
+}
+
+function normalizeFormSatisfaction(value: unknown, fallback = 0) {
+	if (typeof value !== 'number' || Number.isNaN(value)) return fallback;
+	return Math.min(5, Math.max(0, Math.round(value)));
 }
 
 export function normalizeMatchRecord(value: unknown): MatchRecord | null {
@@ -250,10 +255,7 @@ export function normalizeFormState(value: unknown): FormState {
 		smashMeter: normalizeBoolean(candidate.smashMeter, defaultForm.smashMeter),
 		hazards: normalizeBoolean(candidate.hazards, defaultForm.hazards),
 		eliteSmash: normalizeBoolean(candidate.eliteSmash, defaultForm.eliteSmash),
-		satisfaction:
-			typeof candidate.satisfaction === 'number'
-				? Math.min(5, Math.max(1, Math.round(candidate.satisfaction)))
-				: defaultForm.satisfaction,
+		satisfaction: normalizeFormSatisfaction(candidate.satisfaction, defaultForm.satisfaction),
 		toxic: normalizeBoolean(candidate.toxic, defaultForm.toxic),
 		lossReasons: normalizeLossReasons(candidate.lossReasons)
 	};

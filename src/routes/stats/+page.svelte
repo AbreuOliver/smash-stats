@@ -129,19 +129,19 @@
 <main class="flex-1 overflow-y-auto px-3 pt-3 pb-4">
 			<section class="mb-2.5 grid grid-cols-2 gap-px rounded-2xl border-[1.5px] border-[#2a2a38] bg-[#111119] p-px">
 				<div class="rounded-[14px] bg-[#111119] px-3 py-3">
-					<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Total Wins</p>
+					<p class="stage-font text-[14px] font-black uppercase text-[#9c9fb2]">Total Wins</p>
 					<p class="mt-1 text-3xl font-black text-[#18d17f]">{overallSummary.wins}</p>
 				</div>
 				<div class="rounded-[14px] bg-[#111119] px-3 py-3">
-					<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Total Losses</p>
+					<p class="stage-font text-[14px] font-black uppercase text-[#9c9fb2]">Total Losses</p>
 					<p class="mt-1 text-3xl font-black text-[#e8192c]">{overallSummary.losses}</p>
 				</div>
 				<div class="rounded-[14px] bg-[#111119] px-3 py-3">
-					<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Matches</p>
+					<p class="stage-font text-[14px] font-black uppercase text-[#9c9fb2]">Matches</p>
 					<p class="mt-1 text-3xl font-black text-white">{overallSummary.total}</p>
 				</div>
 				<div class="rounded-[14px] bg-[#111119] px-3 py-3">
-					<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Win Rate</p>
+					<p class="stage-font text-[14px] font-black uppercase text-[#9c9fb2]">Win Rate</p>
 					<p class="mt-1 text-3xl font-black text-white">{Math.round(overallSummary.winRate * 100)}%</p>
 				</div>
 			</section>
@@ -176,7 +176,7 @@
 					</div>
 
 					<label class="mt-3 block">
-						<span class="mb-1 block text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">
+						<span class="mb-1 block text-[14px] font-black uppercase text-[#9c9fb2]">
 							Character
 						</span>
 						<select
@@ -202,7 +202,7 @@
 				</div>
 				<div class="min-w-0 flex-1 p-3 pb-3.5">
 					<div class="flex items-center justify-between">
-						<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Filtered Rate</p>
+						<p class="stage-font text-[14px] font-black uppercase text-[#9c9fb2]">Filtered Rate</p>
 						<p class="text-[0.7rem] font-bold text-[#5d6175]">{filteredSummary.total} matches</p>
 					</div>
 					<p class="mt-1 text-3xl font-black text-white">{Math.round(filteredSummary.winRate * 100)}%</p>
@@ -211,7 +211,7 @@
 					<div class="mt-4 h-px bg-[#20222e]"></div>
 
 					<div class="mt-4 flex items-center justify-between">
-						<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">By Character</p>
+						<p class="stage-font text-[14px] font-black uppercase text-[#9c9fb2]">By Character</p>
 						<p class="text-[0.7rem] font-bold text-[#5d6175]">Historical</p>
 					</div>
 
@@ -261,7 +261,7 @@
 				</div>
 				<div class="min-w-0 flex-1 p-3 pb-3.5">
 					<div class="flex items-center justify-between">
-						<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">History</p>
+						<p class="stage-font text-[14px] font-black uppercase text-[#9c9fb2]">History</p>
 						<p class="text-[0.7rem] font-bold text-[#5d6175]">{filteredRecords.length} shown</p>
 					</div>
 
@@ -321,7 +321,7 @@
 				<div class="mx-auto mb-3 h-1 w-16 rounded-full bg-white/15"></div>
 				<div class="flex items-start justify-between gap-3">
 					<div>
-						<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Match</p>
+						<p class="stage-font text-[14px] font-black uppercase text-[#9c9fb2]">Match</p>
 						<h2 class="mt-1 text-xl font-black text-white">
 							{fighterName(selectedRecord.youId)} vs {fighterName(selectedRecord.opponentId)}
 						</h2>
@@ -380,7 +380,7 @@
 
 						<div class="grid grid-cols-2 gap-2">
 							<label class="block">
-								<span class="mb-1 block text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">
+								<span class="mb-1 block text-[14px] font-black uppercase text-[#9c9fb2]">
 									Me
 								</span>
 								<select
@@ -394,7 +394,7 @@
 							</label>
 
 							<label class="block">
-								<span class="mb-1 block text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">
+								<span class="mb-1 block text-[14px] font-black uppercase text-[#9c9fb2]">
 									Opponent
 								</span>
 								<select
@@ -463,7 +463,7 @@
 								}`}
 								onclick={() => updateDraft({ toxic: false })}
 							>
-								<p class="text-[10px] font-black uppercase tracking-[0.35em]">Toxic</p>
+								<p class="stage-font text-[14px] font-black uppercase">Toxic</p>
 								<p class="mt-1 text-lg font-black">No</p>
 							</button>
 							<button
@@ -473,7 +473,7 @@
 								}`}
 								onclick={() => updateDraft({ toxic: true })}
 							>
-								<p class="text-[10px] font-black uppercase tracking-[0.35em]">Toxic</p>
+								<p class="stage-font text-[14px] font-black uppercase">Toxic</p>
 								<p class="mt-1 text-lg font-black">Yes</p>
 							</button>
 						</div>
@@ -490,65 +490,65 @@
 					<div class="mt-3 space-y-2 text-sm">
 						<div class="grid grid-cols-2 gap-px rounded-[10px] border-[1.5px] border-[#2a2a38] bg-[#111119] p-[3px]">
 							<div class="rounded-lg bg-[#111119] px-3 py-2">
-								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Result</p>
+								<p class="stage-font text-[14px] font-black uppercase text-[#9c9fb2]">Result</p>
 								<p class={`mt-1 text-lg font-black ${selectedRecord.result === 'win' ? 'text-[#18d17f]' : 'text-[#e8192c]'}`}>
 									{selectedRecord.result === 'win' ? 'Won' : 'Lost'}
 								</p>
 							</div>
 							<div class="rounded-lg bg-[#111119] px-3 py-2">
-								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Stage</p>
+								<p class="stage-font text-[14px] font-black uppercase text-[#9c9fb2]">Stage</p>
 								<p class="mt-1 text-lg font-black text-white">{selectedRecord.stage.replaceAll('-', ' ')}</p>
 							</div>
 						</div>
 
 						<div class="grid grid-cols-2 gap-px rounded-[10px] border-[1.5px] border-[#2a2a38] bg-[#111119] p-[3px]">
 							<div class="rounded-lg bg-[#111119] px-3 py-2">
-								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Me</p>
+								<p class="stage-font text-[14px] font-black uppercase text-[#9c9fb2]">Me</p>
 								<p class="mt-1 text-lg font-black text-white">{fighterName(selectedRecord.youId)}</p>
 							</div>
 							<div class="rounded-lg bg-[#111119] px-3 py-2">
-								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Opponent</p>
+								<p class="stage-font text-[14px] font-black uppercase text-[#9c9fb2]">Opponent</p>
 								<p class="mt-1 text-lg font-black text-white">{fighterName(selectedRecord.opponentId)}</p>
 							</div>
 						</div>
 
 						<div class="grid grid-cols-2 gap-px rounded-[10px] border-[1.5px] border-[#2a2a38] bg-[#111119] p-[3px]">
 							<div class="rounded-lg bg-[#111119] px-3 py-2">
-								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Saved</p>
+								<p class="stage-font text-[14px] font-black uppercase text-[#9c9fb2]">Saved</p>
 								<p class="mt-1 text-sm font-bold text-white">{formatDate(selectedRecord.createdAt)}</p>
 							</div>
 							<div class="rounded-lg bg-[#111119] px-3 py-2">
-								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Satisfaction</p>
+								<p class="stage-font text-[14px] font-black uppercase text-[#9c9fb2]">Satisfaction</p>
 								<p class="mt-1 text-lg font-black text-white">{selectedRecord.satisfaction}/5</p>
 							</div>
 						</div>
 
 						<div class="grid grid-cols-2 gap-px rounded-[10px] border-[1.5px] border-[#2a2a38] bg-[#111119] p-[3px]">
 							<div class="rounded-lg bg-[#111119] px-3 py-2">
-								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Items</p>
+								<p class="stage-font text-[14px] font-black uppercase text-[#9c9fb2]">Items</p>
 								<p class="stage-font mt-1 text-lg font-black text-white">{selectedRecord.items ? 'On' : 'Off'}</p>
 							</div>
 							<div class="rounded-lg bg-[#111119] px-3 py-2">
-								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Smash Meter</p>
+								<p class="stage-font text-[14px] font-black uppercase text-[#9c9fb2]">Smash Meter</p>
 								<p class="stage-font mt-1 text-lg font-black text-white">{selectedRecord.smashMeter ? 'On' : 'Off'}</p>
 							</div>
 							<div class="rounded-lg bg-[#111119] px-3 py-2">
-								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Hazards</p>
+								<p class="stage-font text-[14px] font-black uppercase text-[#9c9fb2]">Hazards</p>
 								<p class="stage-font mt-1 text-lg font-black text-white">{selectedRecord.hazards ? 'On' : 'Off'}</p>
 							</div>
 							<div class="rounded-lg bg-[#111119] px-3 py-2">
-								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Elite Smash</p>
+								<p class="stage-font text-[14px] font-black uppercase text-[#9c9fb2]">Elite Smash</p>
 								<p class="stage-font mt-1 text-lg font-black text-white">{selectedRecord.eliteSmash ? 'Yes' : 'No'}</p>
 							</div>
 						</div>
 
 						<div class="grid grid-cols-2 gap-px rounded-[10px] border-[1.5px] border-[#2a2a38] bg-[#111119] p-[3px]">
 							<div class="rounded-lg bg-[#111119] px-3 py-2">
-								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Toxic</p>
+								<p class="stage-font text-[14px] font-black uppercase text-[#9c9fb2]">Toxic</p>
 								<p class="mt-1 text-lg font-black text-white">{selectedRecord.toxic ? 'Yes' : 'No'}</p>
 							</div>
 							<div class="rounded-lg bg-[#111119] px-3 py-2">
-								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Loss reasons</p>
+								<p class="stage-font text-[14px] font-black uppercase text-[#9c9fb2]">Loss reasons</p>
 								<p class="mt-1 text-sm font-bold text-white">
 									{selectedRecord.lossReasons.length ? selectedRecord.lossReasons.join(', ') : 'None'}
 								</p>

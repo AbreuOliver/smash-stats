@@ -29,6 +29,7 @@
 	let hydrated = $state(false);
 	let saveToastVisible = $state(false);
 	let saveToastTimer: ReturnType<typeof setTimeout> | undefined;
+	const canSave = $derived.by(() => Boolean(form.youId && form.opponentId && form.stage && form.satisfaction > 0));
 
 	const todayStamp = () => new Date().toDateString();
 	const selectedFighter = (slot: Slot) => fighterById.get(slot === 'you' ? form.youId : form.opponentId);
@@ -74,7 +75,7 @@
 	}
 
 	function saveMatch() {
-		if (!form.youId || !form.opponentId) return;
+		if (!canSave) return;
 		if (saveToastVisible) return;
 
 		const entry: MatchRecord = {
@@ -84,6 +85,7 @@
 		};
 
 		records = [entry, ...records].slice(0, 300);
+		form.satisfaction = 0;
 		saveToastVisible = true;
 
 		if (saveToastTimer) clearTimeout(saveToastTimer);
@@ -345,7 +347,7 @@
 							<div class="flex gap-1">
 								<button
 									type="button"
-									class={`rounded-[7px] border-[1.5px] px-3 py-[5px] text-[13px] font-bold uppercase ${
+									class={`stage-font rounded-[7px] border-[1.5px] px-3 py-[5px] text-[13px] font-bold uppercase ${
 										!form.eliteSmash
 											? 'border-[#444] bg-[#2a2a38] text-[#f0f0f8]'
 											: 'border-[#2a2a38] bg-transparent text-[#555]'
@@ -358,7 +360,7 @@
 								</button>
 								<button
 									type="button"
-									class={`rounded-[7px] border-[1.5px] px-3 py-[5px] text-[13px] font-bold uppercase ${
+									class={`stage-font rounded-[7px] border-[1.5px] px-3 py-[5px] text-[13px] font-bold uppercase ${
 										form.eliteSmash
 											? 'border-[#19cfe6] bg-[#19cfe6] text-white'
 											: 'border-[#2a2a38] bg-transparent text-[#555]'
@@ -402,7 +404,7 @@
 							<div class="flex gap-1">
 								<button
 									type="button"
-									class={`rounded-[7px] border-[1.5px] px-3 py-[5px] text-[13px] font-bold uppercase ${
+									class={`stage-font rounded-[7px] border-[1.5px] px-3 py-[5px] text-[13px] font-bold uppercase ${
 										!form.toxic ? 'border-[#444] bg-[#2a2a38] text-[#f0f0f8]' : 'border-[#2a2a38] bg-transparent text-[#555]'
 									}`}
 									onclick={() => {
@@ -413,7 +415,7 @@
 								</button>
 								<button
 									type="button"
-									class={`rounded-[7px] border-[1.5px] px-3 py-[5px] text-[13px] font-bold uppercase ${
+									class={`stage-font rounded-[7px] border-[1.5px] px-3 py-[5px] text-[13px] font-bold uppercase ${
 										form.toxic ? 'border-[#444] bg-[#2a2a38] text-[#f0f0f8]' : 'border-[#2a2a38] bg-transparent text-[#555]'
 									}`}
 									onclick={() => {
@@ -461,14 +463,14 @@
 				<button
 					type="button"
 					class={`w-full rounded-[14px] py-[15px] text-[17px] font-extrabold uppercase tracking-[0.12em] ${
-						!form.youId || !form.opponentId || saveToastVisible
-							? 'cursor-not-allowed bg-[#1a1a26] text-[#333] shadow-none'
+						!canSave || saveToastVisible
+							? 'cursor-not-allowed border-[1.5px] border-[#444] bg-[#2a2a38] text-[#f0f0f8] shadow-none opacity-70'
 							: 'bg-[#0fd18a] text-black'
 					}`}
 					onclick={saveMatch}
-					disabled={!form.youId || !form.opponentId || saveToastVisible}
+					disabled={!canSave || saveToastVisible}
 				>
-					{!form.youId || !form.opponentId ? 'Fill Required Fields' : 'Save Match'}
+					{!canSave ? 'Fill Required Fields' : 'Save Match'}
 				</button>
 				<div class="mt-1.5 text-center text-[11px] font-body text-[#333]">
 					Fighters · Stage · Satisfaction required
