@@ -230,13 +230,13 @@
 			<div class="grid grid-cols-2 gap-px bg-white/10 p-px">
 				<button
 					type="button"
-					class={`border-0 p-0 text-left transition ${
+					class={`h-60 border-0 p-0 text-left transition ${
 						form.youId ? 'bg-[#111111]' : 'bg-[#0b0b0b]'
 					}`}
 					onclick={() => openDrawer('you')}
 				>
-					<div class="flex min-h-36 flex-col">
-						<div class="flex-1 overflow-hidden border-b border-white/10 bg-[#050505]">
+					<div class="grid h-full grid-rows-[1fr_auto]">
+						<div class="min-h-0 overflow-hidden border-b border-white/10 bg-[#050505]">
 							{#if selectedFighter('you')}
 								<img
 									src={selectedFighter('you')?.image}
@@ -245,7 +245,7 @@
 								/>
 							{/if}
 						</div>
-						<div class="flex items-center justify-between gap-2 px-3 py-2">
+						<div class="flex h-16 items-center justify-between gap-2 px-3 py-2">
 							<div>
 								<p class="text-[10px] font-black uppercase tracking-[0.4em] text-red-500">Me</p>
 								<p class="mt-1 text-[1rem] font-black leading-none text-white">
@@ -259,13 +259,13 @@
 
 				<button
 					type="button"
-					class={`border-0 p-0 text-left transition ${
+					class={`h-60 border-0 p-0 text-left transition ${
 						form.opponentId ? 'bg-[#111111]' : 'bg-[#0b0b0b]'
 					}`}
 					onclick={() => openDrawer('opponent')}
 				>
-					<div class="flex min-h-36 flex-col">
-						<div class="flex-1 overflow-hidden border-b border-white/10 bg-[#050505]">
+					<div class="grid h-full grid-rows-[1fr_auto]">
+						<div class="min-h-0 overflow-hidden border-b border-white/10 bg-[#050505]">
 							{#if selectedFighter('opponent')}
 								<img
 									src={selectedFighter('opponent')?.image}
@@ -274,7 +274,7 @@
 								/>
 							{/if}
 						</div>
-						<div class="flex items-center justify-between gap-2 px-3 py-2">
+						<div class="flex h-16 items-center justify-between gap-2 px-3 py-2">
 							<div>
 								<p class="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">Opponent</p>
 								<p class="mt-1 text-[1rem] font-black leading-none text-white">
