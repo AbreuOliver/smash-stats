@@ -77,6 +77,22 @@
 		closeRecord();
 	}
 
+	function deleteSelectedRecord() {
+		if (!selectedRecordId) return;
+
+		const selected = records.find((record) => record.id === selectedRecordId);
+		if (!selected) return;
+
+		const confirmed = window.confirm(
+			`Delete ${fighterName(selected.youId)} vs ${fighterName(selected.opponentId)}?`
+		);
+
+		if (!confirmed) return;
+
+		updateLocalRecords(records.filter((record) => record.id !== selectedRecordId));
+		closeRecord();
+	}
+
 	onMount(() => {
 		if (!browser) return;
 
@@ -292,6 +308,14 @@
 						}}
 					>
 						{editMode ? 'Viewing' : 'Edit'}
+					</button>
+					<button
+						type="button"
+						class="border border-red-500/50 bg-red-500/10 px-3 py-2 text-[0.7rem] font-black uppercase tracking-[0.2em] text-red-300"
+						onclick={deleteSelectedRecord}
+						aria-label="Delete match entry"
+					>
+						Delete
 					</button>
 					<button
 						type="button"

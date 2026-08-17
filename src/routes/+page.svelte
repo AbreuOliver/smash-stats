@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
-	import { slide } from 'svelte/transition';
 	import {
 		RECORDS_KEY,
 		STORAGE_KEY,
@@ -24,7 +23,8 @@
 	let activeSlot = $state<Slot>('you');
 	let search = $state('');
 	let hydrated = $state(false);
-	let menuOpen = $state(false);
+	let saveToastVisible = $state(false);
+	let saveToastTimer: ReturnType<typeof setTimeout> | undefined;
 
 	const todayStamp = () => new Date().toDateString();
 
@@ -55,14 +55,6 @@
 		drawerOpen = false;
 	}
 
-	function toggleMenu() {
-		menuOpen = !menuOpen;
-	}
-
-	function closeMenu() {
-		menuOpen = false;
-	}
-
 	function pickFighter(fighter: Fighter) {
 		if (activeSlot === 'you') {
 			form.youId = fighter.id;
@@ -85,6 +77,7 @@
 
 	function saveMatch() {
 		if (!form.youId || !form.opponentId) return;
+		if (saveToastVisible) return;
 
 		const entry: MatchRecord = {
 			id: crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`,
@@ -93,6 +86,12 @@
 		};
 
 		records = [entry, ...records].slice(0, 300);
+		saveToastVisible = true;
+
+		if (saveToastTimer) clearTimeout(saveToastTimer);
+		saveToastTimer = setTimeout(() => {
+			saveToastVisible = false;
+		}, 1800);
 	}
 
 	onMount(() => {
@@ -138,38 +137,6 @@
 		<header class="relative z-40 mb-1 overflow-visible border border-white/10 bg-black px-2 py-2">
 			<div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.08),transparent_28%),linear-gradient(135deg,transparent_0,transparent_50%,rgba(255,255,255,0.04)_50%,rgba(255,255,255,0.04)_51%,transparent_51%)]"></div>
 			<div class="relative flex items-start gap-2">
-				<div class="relative">
-					<button
-						type="button"
-						class="grid h-10 w-10 place-items-center border border-white/10 bg-[#0b0b0b] text-zinc-300"
-						onclick={toggleMenu}
-						aria-label="Open menu"
-						aria-expanded={menuOpen}
-					>
-						<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
-							<path d="M4 6h16M4 12h16M4 18h16" />
-						</svg>
-					</button>
-
-					{#if menuOpen}
-						<div
-							class="absolute left-0 top-full z-[200] mt-px w-52 border border-white/10 bg-black shadow-[0_16px_30px_rgba(0,0,0,0.5)]"
-							transition:slide|local={{ duration: 150 }}
-						>
-							<a
-								href="/stats"
-								class="block border-b border-white/10 px-3 py-3 text-sm font-black uppercase tracking-[0.18em] text-white"
-								onclick={closeMenu}
-							>
-								Stats & history
-							</a>
-							<div class="px-3 py-2 text-[0.65rem] font-bold uppercase tracking-[0.25em] text-zinc-500">
-								Local data only
-							</div>
-						</div>
-					{/if}
-				</div>
-
 				<div class="flex min-w-0 flex-1 items-center gap-2">
 					<div class="relative grid h-12 w-12 place-items-center overflow-hidden bg-[#1b1b1b]">
 						<div class="absolute inset-0 bg-[conic-gradient(from_90deg,#16a34a_0_25%,#0f0f0f_25%_50%,#16a34a_50%_75%,#0f0f0f_75%_100%)] opacity-95"></div>
@@ -184,7 +151,7 @@
 					</div>
 				</div>
 
-				<div class="w-28 border border-white/10 bg-[#8c8c8c] px-2 py-1 text-center text-black">
+				<a href="/stats" class="w-28 border border-white/10 bg-[#8c8c8c] px-2 py-1 text-center text-black">
 					<p class="text-[0.58rem] font-black uppercase tracking-[0.3em] text-black/70">Today</p>
 					<div class="mt-0.5 flex items-end justify-center gap-1">
 						<div class="text-lg font-black leading-none">{todaySummary.wins}</div>
@@ -194,7 +161,7 @@
 					<p class="mt-0.5 text-[0.55rem] font-black uppercase tracking-[0.22em] text-black/70">
 						Wins / Losses
 					</p>
-				</div>
+				</a>
 			</div>
 		</header>
 
@@ -432,8 +399,11 @@
 
 		<button
 			type="button"
-			class="fixed inset-x-0 bottom-0 z-30 min-h-16 mx-auto flex w-full max-w-[460px] items-center justify-center gap-3 border border-emerald-500 bg-emerald-500 px-4 py-3 text-base font-black text-black"
+			class={`fixed inset-x-0 bottom-0 z-30 mx-auto flex min-h-16 w-full max-w-[460px] items-center justify-center gap-3 border border-emerald-500 px-4 py-3 text-base font-black text-black ${
+				saveToastVisible ? 'bg-emerald-400/80' : 'bg-emerald-500'
+			}`}
 			onclick={saveMatch}
+			disabled={saveToastVisible}
 		>
 		<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.9">
 			<path d="M5 4h11l3 3v13H5z" />
@@ -502,8 +472,8 @@
 		</div>
 	{/if}
 
-	<div class="fixed bottom-14 left-1 z-20 pointer-events-none">
-		<div class="flex items-center gap-2 border border-white/10 bg-black/90 px-2 py-1">
+		<div class="fixed bottom-14 left-1 z-20 pointer-events-none">
+			<div class="flex items-center gap-2 border border-white/10 bg-black/90 px-2 py-1">
 			<div class="relative grid h-8 w-8 place-items-center overflow-hidden bg-[#1b1b1b]">
 				<div class="absolute inset-0 bg-[conic-gradient(from_90deg,#16a34a_0_25%,#0f0f0f_25%_50%,#16a34a_50%_75%,#0f0f0f_75%_100%)]"></div>
 				<div class="absolute inset-[8px] rounded-full bg-[#0b0b0b]"></div>
@@ -513,5 +483,15 @@
 				<p class="text-[0.65rem] font-black uppercase tracking-[0.18em] text-white">Stats</p>
 			</div>
 		</div>
+
+		{#if saveToastVisible}
+			<div
+				class="fixed inset-x-0 bottom-20 z-[60] mx-auto w-fit max-w-[90vw] border border-emerald-500 bg-emerald-500 px-4 py-2 text-center text-sm font-black text-black shadow-[0_10px_30px_rgba(0,0,0,0.4)]"
+				role="status"
+				aria-live="polite"
+			>
+				Match saved
+			</div>
+		{/if}
 	</div>
 </div>
