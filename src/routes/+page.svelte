@@ -249,7 +249,7 @@
 						Stage
 					</div>
 				</div>
-				<div class="min-w-0 flex-1 p-3 pb-3.5">
+				<div class="flex-1 p-3 pb-3.5 min-w-0">
 					<div class="grid grid-cols-3 gap-1.5">
 						{#each [
 							{ id: 'final-destination', label: 'Final Destination' },
@@ -258,7 +258,7 @@
 						] as stageOption}
 							<button
 								type="button"
-								class={`rounded-[9px] border-[1.5px] px-1 py-[9px] text-[12px] font-bold uppercase leading-tight ${
+								class={`rounded-[9px] py-[9px] px-1 font-display font-bold text-[12px] tracking-[0.04em] uppercase cursor-pointer transition-all duration-[120ms] leading-tight border-[1.5px] ${
 									form.stage === stageOption.id
 										? 'bg-[#111119] text-white border-[#2a2a38]'
 										: 'bg-[#111119] text-[#666] border-[#2a2a38]'

@@ -408,7 +408,8 @@
 							</label>
 						</div>
 
-						<div class="grid grid-cols-3 gap-1.5 rounded-[10px] border-[1.5px] border-[#2a2a38] bg-[#111119] p-[3px]">
+						<div class="flex-1 p-3 pb-3.5 min-w-0">
+							<div class="grid grid-cols-3 gap-1.5">
 							{#each [
 								{ id: 'final-destination', label: 'Final Destination' },
 								{ id: 'battlefield', label: 'Battlefield' },
@@ -416,7 +417,7 @@
 							] as stageOption}
 								<button
 									type="button"
-									class={`rounded-[9px] border-[1.5px] px-1 py-[9px] text-[12px] font-bold uppercase leading-tight ${
+									class={`rounded-[9px] py-[9px] px-1 font-display font-bold text-[12px] tracking-[0.04em] uppercase cursor-pointer transition-all duration-[120ms] leading-tight border-[1.5px] ${
 										draft.stage === stageOption.id ? 'bg-[#e8192c] text-white border-[#e8192c]' : 'bg-[#111119] text-[#666] border-[#2a2a38]'
 									}`}
 									onclick={() => updateDraft({ stage: stageOption.id as MatchRecord['stage'] })}
@@ -424,6 +425,7 @@
 									{stageOption.label}
 								</button>
 							{/each}
+							</div>
 						</div>
 
 						<div class="grid grid-cols-2 gap-2">

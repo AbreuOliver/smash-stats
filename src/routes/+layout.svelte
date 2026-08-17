@@ -22,7 +22,10 @@
 	<meta name="apple-mobile-web-app-capable" content="yes" />
 </svelte:head>
 <div class="scanlines min-h-dvh bg-[#08080f] text-white">
-	<div class="relative z-10 mx-auto flex min-h-dvh w-full max-w-[430px] flex-col">
+	<div
+		class="relative z-10 mx-auto flex min-h-dvh w-full max-w-[430px] flex-col"
+		style="padding-top: env(safe-area-inset-top);"
+	>
 		{@render children()}
 	</div>
 </div>
