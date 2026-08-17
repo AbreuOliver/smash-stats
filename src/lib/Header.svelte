@@ -10,7 +10,10 @@
 	} = $props();
 </script>
 
-<header class="sticky top-0 z-50 border-b border-[#2a2a38] bg-[#0d0d16] px-4 pt-[14px] pb-3">
+<header
+	class="sticky top-0 z-50 border-b border-[#2a2a38] bg-[#0d0d16] px-4 pb-3"
+	style="padding-top: calc(env(safe-area-inset-top) + 14px);"
+>
 	<div class="mb-2.5 flex items-center gap-2">
 		<img src="/super-smash-bros-removebg-preview.png" alt="" class="h-6 w-6 shrink-0 brightness-0 invert" />
 		<!-- <img src="/Smash-Bros-Symbol-Photoroom.png" alt="" class="h-6 w-6 shrink-0 brightness-0 invert" /> -->

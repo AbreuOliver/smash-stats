@@ -258,9 +258,9 @@
 						] as stageOption}
 							<button
 								type="button"
-								class={`rounded-[9px] py-[9px] px-1 font-display font-bold text-[12px] tracking-[0.04em] uppercase cursor-pointer transition-all duration-[120ms] leading-tight border-[1.5px] ${
+								class={`stage-font rounded-[9px] py-[9px] px-1 font-bold text-[12px] tracking-[0.04em] uppercase cursor-pointer transition-all duration-[120ms] leading-tight border-[1.5px] ${
 									form.stage === stageOption.id
-										? 'bg-[#111119] text-white border-[#2a2a38]'
+										? 'bg-[#6c63ff] text-white border-[#6c63ff]'
 										: 'bg-[#111119] text-[#666] border-[#2a2a38]'
 								}`}
 								onclick={() => {
@@ -294,7 +294,7 @@
 								<div class="flex gap-1">
 									<button
 										type="button"
-										class={`rounded-[7px] border-[1.5px] px-3 py-[5px] text-[13px] font-bold uppercase ${
+										class={`stage-font rounded-[7px] border-[1.5px] px-3 py-[5px] text-[13px] font-bold uppercase ${
 											form[toggle.key as 'items' | 'smashMeter' | 'hazards' | 'eliteSmash']
 												? 'border-[#444] bg-transparent text-[#555]'
 												: 'border-[#444] bg-[#2a2a38] text-[#f0f0f8]'
@@ -308,7 +308,7 @@
 									</button>
 									<button
 										type="button"
-										class={`rounded-[7px] border-[1.5px] px-3 py-[5px] text-[13px] font-bold uppercase ${
+										class={`stage-font rounded-[7px] border-[1.5px] px-3 py-[5px] text-[13px] font-bold uppercase ${
 											form[toggle.key as 'items' | 'smashMeter' | 'hazards' | 'eliteSmash']
 												? 'border-[#444] bg-[#2a2a38] text-[#f0f0f8]'
 												: 'border-[#2a2a38] bg-transparent text-[#555]'
@@ -322,7 +322,9 @@
 									</button>
 								</div>
 							</div>
-							<div class="h-px bg-[#20222e]"></div>
+							{#if toggle.key !== 'hazards'}
+								<div class="h-px bg-[#20222e]"></div>
+							{/if}
 						{/each}
 					</div>
 				</div>

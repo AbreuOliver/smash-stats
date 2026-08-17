@@ -417,8 +417,8 @@
 							] as stageOption}
 								<button
 									type="button"
-									class={`rounded-[9px] py-[9px] px-1 font-display font-bold text-[12px] tracking-[0.04em] uppercase cursor-pointer transition-all duration-[120ms] leading-tight border-[1.5px] ${
-										draft.stage === stageOption.id ? 'bg-[#e8192c] text-white border-[#e8192c]' : 'bg-[#111119] text-[#666] border-[#2a2a38]'
+									class={`stage-font rounded-[9px] py-[9px] px-1 font-bold text-[12px] tracking-[0.04em] uppercase cursor-pointer transition-all duration-[120ms] leading-tight border-[1.5px] ${
+										draft.stage === stageOption.id ? 'bg-[#6c63ff] text-white border-[#6c63ff]' : 'bg-[#111119] text-[#666] border-[#2a2a38]'
 									}`}
 									onclick={() => updateDraft({ stage: stageOption.id as MatchRecord['stage'] })}
 								>
@@ -526,19 +526,19 @@
 						<div class="grid grid-cols-2 gap-px rounded-[10px] border-[1.5px] border-[#2a2a38] bg-[#111119] p-[3px]">
 							<div class="rounded-lg bg-[#111119] px-3 py-2">
 								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Items</p>
-								<p class="mt-1 text-lg font-black text-white">{selectedRecord.items ? 'On' : 'Off'}</p>
+								<p class="stage-font mt-1 text-lg font-black text-white">{selectedRecord.items ? 'On' : 'Off'}</p>
 							</div>
 							<div class="rounded-lg bg-[#111119] px-3 py-2">
 								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Smash Meter</p>
-								<p class="mt-1 text-lg font-black text-white">{selectedRecord.smashMeter ? 'On' : 'Off'}</p>
+								<p class="stage-font mt-1 text-lg font-black text-white">{selectedRecord.smashMeter ? 'On' : 'Off'}</p>
 							</div>
 							<div class="rounded-lg bg-[#111119] px-3 py-2">
 								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Hazards</p>
-								<p class="mt-1 text-lg font-black text-white">{selectedRecord.hazards ? 'On' : 'Off'}</p>
+								<p class="stage-font mt-1 text-lg font-black text-white">{selectedRecord.hazards ? 'On' : 'Off'}</p>
 							</div>
 							<div class="rounded-lg bg-[#111119] px-3 py-2">
 								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Elite Smash</p>
-								<p class="mt-1 text-lg font-black text-white">{selectedRecord.eliteSmash ? 'Yes' : 'No'}</p>
+								<p class="stage-font mt-1 text-lg font-black text-white">{selectedRecord.eliteSmash ? 'Yes' : 'No'}</p>
 							</div>
 						</div>
 
