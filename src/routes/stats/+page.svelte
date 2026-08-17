@@ -16,6 +16,9 @@
 	let selectedResult = $state<ResultFilter>('all');
 	let selectedFighter = $state('all');
 	let hydrated = $state(false);
+	let selectedRecordId = $state<string | null>(null);
+	let editMode = $state(false);
+	let draft = $state<MatchRecord | null>(null);
 
 	const filteredRecords = $derived.by(() =>
 		filterRecords(records, { result: selectedResult, fighterId: selectedFighter })
@@ -24,6 +27,7 @@
 	const overallSummary = $derived.by(() => summaryByResult(records));
 	const filteredSummary = $derived.by(() => summaryByResult(filteredRecords));
 	const fighterBreakdown = $derived.by(() => groupByFighter(filteredRecords));
+	const selectedRecord = $derived.by(() => records.find((record) => record.id === selectedRecordId) ?? null);
 
 	function formatDate(timestamp: string) {
 		return new Intl.DateTimeFormat(undefined, {
@@ -32,6 +36,45 @@
 			hour: 'numeric',
 			minute: '2-digit'
 		}).format(new Date(timestamp));
+	}
+
+	function openRecord(record: MatchRecord) {
+		selectedRecordId = record.id;
+		editMode = false;
+		draft = JSON.parse(JSON.stringify(record));
+	}
+
+	function closeRecord() {
+		selectedRecordId = null;
+		editMode = false;
+		draft = null;
+	}
+
+	function updateLocalRecords(nextRecords: MatchRecord[]) {
+		records = nextRecords;
+		localStorage.setItem(RECORDS_KEY, JSON.stringify(nextRecords));
+	}
+
+	function updateDraft(partial: Partial<MatchRecord>) {
+		if (!draft) return;
+		draft = { ...draft, ...partial } as MatchRecord;
+	}
+
+	function saveDraft() {
+		if (!draft || !selectedRecordId) return;
+
+		const nextRecords = records.map((record) => {
+			if (record.id !== selectedRecordId) return record;
+			return {
+				...record,
+				...draft,
+				id: record.id,
+				createdAt: record.createdAt
+			};
+		});
+
+		updateLocalRecords(nextRecords);
+		closeRecord();
 	}
 
 	onMount(() => {
@@ -181,7 +224,11 @@
 			<div class="mt-2 space-y-px bg-white/10 p-px">
 				{#if filteredRecords.length}
 					{#each filteredRecords as record}
-						<div class="grid grid-cols-[auto_1fr_auto] items-center gap-2 bg-[#111111] px-3 py-2">
+						<button
+							type="button"
+							class="grid grid-cols-[auto_1fr_auto] items-center gap-2 bg-[#111111] px-3 py-2 text-left"
+							onclick={() => openRecord(record)}
+						>
 							<div
 								class={`text-sm font-black uppercase tracking-[0.18em] ${
 									record.result === 'win' ? 'text-emerald-400' : 'text-red-500'
@@ -201,7 +248,7 @@
 								<p class="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-zinc-500">Sat.</p>
 								<p class="text-sm font-black text-white">{record.satisfaction}/5</p>
 							</div>
-						</div>
+						</button>
 					{/each}
 				{:else}
 					<div class="bg-[#111111] px-3 py-4 text-sm text-zinc-500">
@@ -215,4 +262,253 @@
 			<div class="mt-2 text-xs font-medium text-zinc-500">Loading local data…</div>
 		{/if}
 	</div>
+
+	{#if selectedRecord}
+		<button
+			type="button"
+			class="fixed inset-0 z-40 bg-black/80"
+			onclick={closeRecord}
+			aria-label="Close match details"
+		></button>
+		<div class="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-[460px] border border-white/10 bg-black p-3">
+			<div class="mx-auto mb-2 h-1 w-20 bg-white/15"></div>
+			<div class="flex items-start justify-between gap-3">
+				<div>
+					<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Match</p>
+					<h2 class="mt-1 text-xl font-black text-white">
+						{fighterName(selectedRecord.youId)} vs {fighterName(selectedRecord.opponentId)}
+					</h2>
+				</div>
+				<div class="flex items-center gap-2">
+					<button
+						type="button"
+						class="border border-white/10 bg-[#101010] px-3 py-2 text-[0.7rem] font-black uppercase tracking-[0.2em] text-zinc-300"
+						onclick={() => {
+							editMode = !editMode;
+						}}
+					>
+						{editMode ? 'Viewing' : 'Edit'}
+					</button>
+					<button
+						type="button"
+						class="grid h-10 w-10 place-items-center border border-white/10 bg-[#101010] text-xl text-zinc-300"
+						onclick={closeRecord}
+						aria-label="Close match details"
+					>
+						×
+					</button>
+				</div>
+			</div>
+
+			{#if editMode && draft}
+				<div class="mt-3 space-y-2">
+					<div class="grid grid-cols-2 gap-px bg-white/10 p-px">
+						<button
+							type="button"
+							class={`h-11 border-0 px-3 text-left text-sm font-black uppercase tracking-[0.14em] ${
+								draft.result === 'win' ? 'bg-emerald-500 text-white' : 'bg-[#111111] text-zinc-300'
+							}`}
+							onclick={() => updateDraft({ result: 'win' })}
+						>
+							Won
+						</button>
+						<button
+							type="button"
+							class={`h-11 border-0 px-3 text-left text-sm font-black uppercase tracking-[0.14em] ${
+								draft.result === 'loss' ? 'bg-red-500 text-white' : 'bg-[#111111] text-zinc-300'
+							}`}
+							onclick={() => updateDraft({ result: 'loss' })}
+						>
+							Lost
+						</button>
+					</div>
+
+					<div class="grid grid-cols-2 gap-2">
+						<label class="block">
+							<span class="mb-1 block text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">
+								Me
+							</span>
+							<select
+								bind:value={draft.youId}
+								class="w-full border border-white/10 bg-[#111111] px-3 py-2.5 text-sm font-bold text-white outline-none"
+							>
+								{#each fighters as fighter}
+									<option value={fighter.id}>{fighter.name}</option>
+								{/each}
+							</select>
+						</label>
+
+						<label class="block">
+							<span class="mb-1 block text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">
+								Opponent
+							</span>
+							<select
+								bind:value={draft.opponentId}
+								class="w-full border border-white/10 bg-[#111111] px-3 py-2.5 text-sm font-bold text-white outline-none"
+							>
+								{#each fighters as fighter}
+									<option value={fighter.id}>{fighter.name}</option>
+								{/each}
+							</select>
+						</label>
+					</div>
+
+					<div class="grid grid-cols-3 gap-px bg-white/10 p-px">
+						{#each [
+							{ id: 'final-destination', label: 'Final Destination' },
+							{ id: 'battlefield', label: 'Battlefield' },
+							{ id: 'other', label: 'Other' }
+						] as stageOption}
+							<button
+								type="button"
+								class={`h-11 border-0 px-2 text-[0.75rem] font-bold uppercase tracking-[0.14em] ${
+									draft.stage === stageOption.id ? 'bg-red-500 text-white' : 'bg-[#111111] text-zinc-300'
+								}`}
+								onclick={() => updateDraft({ stage: stageOption.id as MatchRecord['stage'] })}
+							>
+								{stageOption.label}
+							</button>
+						{/each}
+					</div>
+
+					<div class="grid grid-cols-2 gap-px bg-white/10 p-px">
+						{#each [
+							{ key: 'items', label: 'Items' },
+							{ key: 'smashMeter', label: 'Smash Meter' },
+							{ key: 'hazards', label: 'Hazards' },
+							{ key: 'eliteSmash', label: 'Elite Smash' }
+						] as toggle}
+							<button
+								type="button"
+								class={`flex h-11 items-center justify-between border-0 px-3 text-left ${
+									draft[toggle.key as 'items' | 'smashMeter' | 'hazards' | 'eliteSmash']
+										? 'bg-white text-black'
+										: 'bg-[#111111] text-zinc-300'
+								}`}
+								onclick={() => {
+									const key = toggle.key as 'items' | 'smashMeter' | 'hazards' | 'eliteSmash';
+									const currentDraft = draft;
+									if (!currentDraft) return;
+									draft = { ...currentDraft, [key]: !currentDraft[key] } as MatchRecord;
+								}}
+							>
+								<span class="text-sm font-black uppercase tracking-[0.12em]">{toggle.label}</span>
+								<span class="text-lg">{draft[toggle.key as 'items' | 'smashMeter' | 'hazards' | 'eliteSmash'] ? '●' : '○'}</span>
+							</button>
+						{/each}
+					</div>
+
+					<div class="grid grid-cols-2 gap-px bg-white/10 p-px">
+						<button
+							type="button"
+							class={`border-0 px-3 py-2 text-left ${
+								!draft.toxic ? 'bg-red-500 text-white' : 'bg-[#111111] text-zinc-400'
+							}`}
+							onclick={() => updateDraft({ toxic: false })}
+						>
+							<p class="text-[10px] font-black uppercase tracking-[0.35em]">Toxic</p>
+							<p class="mt-1 text-lg font-black">No</p>
+						</button>
+						<button
+							type="button"
+							class={`border-0 px-3 py-2 text-left ${
+								draft.toxic ? 'bg-red-500 text-white' : 'bg-[#111111] text-zinc-400'
+							}`}
+							onclick={() => updateDraft({ toxic: true })}
+						>
+							<p class="text-[10px] font-black uppercase tracking-[0.35em]">Toxic</p>
+							<p class="mt-1 text-lg font-black">Yes</p>
+						</button>
+					</div>
+
+					<button
+						type="button"
+						class="w-full border border-emerald-500 bg-emerald-500 px-4 py-3 text-base font-black text-black"
+						onclick={saveDraft}
+					>
+						Save Changes
+					</button>
+				</div>
+			{:else}
+				<div class="mt-3 space-y-2 text-sm">
+					<div class="grid grid-cols-2 gap-px bg-white/10 p-px">
+						<div class="bg-[#111111] px-3 py-2">
+							<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Result</p>
+							<p class={`mt-1 text-lg font-black ${selectedRecord.result === 'win' ? 'text-emerald-400' : 'text-red-500'}`}>
+								{selectedRecord.result === 'win' ? 'Won' : 'Lost'}
+							</p>
+						</div>
+						<div class="bg-[#111111] px-3 py-2">
+							<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Stage</p>
+							<p class="mt-1 text-lg font-black text-white">{selectedRecord.stage.replaceAll('-', ' ')}</p>
+						</div>
+					</div>
+
+					<div class="grid grid-cols-2 gap-px bg-white/10 p-px">
+						<div class="bg-[#111111] px-3 py-2">
+							<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Me</p>
+							<p class="mt-1 text-lg font-black text-white">{fighterName(selectedRecord.youId)}</p>
+						</div>
+						<div class="bg-[#111111] px-3 py-2">
+							<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Opponent</p>
+							<p class="mt-1 text-lg font-black text-white">{fighterName(selectedRecord.opponentId)}</p>
+						</div>
+					</div>
+
+					<div class="grid grid-cols-2 gap-px bg-white/10 p-px">
+						<div class="bg-[#111111] px-3 py-2">
+							<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Saved</p>
+							<p class="mt-1 text-sm font-bold text-white">{formatDate(selectedRecord.createdAt)}</p>
+						</div>
+						<div class="bg-[#111111] px-3 py-2">
+							<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Satisfaction</p>
+							<p class="mt-1 text-lg font-black text-white">{selectedRecord.satisfaction}/5</p>
+						</div>
+					</div>
+
+					<div class="grid grid-cols-2 gap-px bg-white/10 p-px">
+						<div class="bg-[#111111] px-3 py-2">
+							<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Items</p>
+							<p class="mt-1 text-lg font-black text-white">{selectedRecord.items ? 'On' : 'Off'}</p>
+						</div>
+						<div class="bg-[#111111] px-3 py-2">
+							<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Smash Meter</p>
+							<p class="mt-1 text-lg font-black text-white">{selectedRecord.smashMeter ? 'On' : 'Off'}</p>
+						</div>
+						<div class="bg-[#111111] px-3 py-2">
+							<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Hazards</p>
+							<p class="mt-1 text-lg font-black text-white">{selectedRecord.hazards ? 'On' : 'Off'}</p>
+						</div>
+						<div class="bg-[#111111] px-3 py-2">
+							<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Elite Smash</p>
+							<p class="mt-1 text-lg font-black text-white">{selectedRecord.eliteSmash ? 'Yes' : 'No'}</p>
+						</div>
+					</div>
+
+					<div class="grid grid-cols-2 gap-px bg-white/10 p-px">
+						<div class="bg-[#111111] px-3 py-2">
+							<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Toxic</p>
+							<p class="mt-1 text-lg font-black text-white">{selectedRecord.toxic ? 'Yes' : 'No'}</p>
+						</div>
+						<div class="bg-[#111111] px-3 py-2">
+							<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Loss reasons</p>
+							<p class="mt-1 text-sm font-bold text-white">
+								{selectedRecord.lossReasons.length ? selectedRecord.lossReasons.join(', ') : 'None'}
+							</p>
+						</div>
+					</div>
+
+					<button
+						type="button"
+						class="w-full border border-white/10 bg-[#111111] px-4 py-3 text-base font-black text-white"
+						onclick={() => {
+							editMode = true;
+						}}
+					>
+						Edit Match
+					</button>
+				</div>
+			{/if}
+		</div>
+	{/if}
 </div>

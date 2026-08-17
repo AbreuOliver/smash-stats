@@ -432,7 +432,7 @@
 
 		<button
 			type="button"
-			class="fixed inset-x-0 bottom-0 z-30 mx-auto flex w-full max-w-[460px] items-center justify-center gap-3 border border-emerald-500 bg-emerald-500 px-4 py-3 text-base font-black text-black"
+			class="fixed inset-x-0 bottom-0 z-30 min-h-16 mx-auto flex w-full max-w-[460px] items-center justify-center gap-3 border border-emerald-500 bg-emerald-500 px-4 py-3 text-base font-black text-black"
 			onclick={saveMatch}
 		>
 		<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.9">
