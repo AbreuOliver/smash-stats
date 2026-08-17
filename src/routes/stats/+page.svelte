@@ -226,8 +226,12 @@
 					{#each filteredRecords as record}
 						<button
 							type="button"
-							class="grid grid-cols-[auto_1fr_auto] items-center gap-2 bg-[#111111] px-3 py-2 text-left"
-							onclick={() => openRecord(record)}
+							class="grid w-full grid-cols-[auto_1fr_auto] items-stretch gap-2 bg-[#111111] px-3 py-2 text-left cursor-pointer touch-manipulation active:bg-[#1a1a1a]"
+							aria-label={`Open match details for ${fighterName(record.youId)} versus ${fighterName(record.opponentId)}`}
+							onclick={(event) => {
+								event.preventDefault();
+								openRecord(record);
+							}}
 						>
 							<div
 								class={`text-sm font-black uppercase tracking-[0.18em] ${
