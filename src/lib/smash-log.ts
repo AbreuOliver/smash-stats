@@ -168,6 +168,97 @@ export const defaultForm: FormState = {
 
 export const fighterById = new Map(fighters.map((fighter) => [fighter.id, fighter]));
 
+function isResult(value: unknown): value is Result {
+	return value === 'win' || value === 'loss';
+}
+
+function isStage(value: unknown): value is Stage {
+	return value === 'final-destination' || value === 'battlefield' || value === 'other';
+}
+
+function normalizeBoolean(value: unknown, fallback = false) {
+	return typeof value === 'boolean' ? value : fallback;
+}
+
+function normalizeLossReasons(value: unknown) {
+	if (!Array.isArray(value)) return [];
+	return value.filter((reason): reason is string => typeof reason === 'string');
+}
+
+export function normalizeMatchRecord(value: unknown): MatchRecord | null {
+	if (!value || typeof value !== 'object') return null;
+
+	const candidate = value as Partial<MatchRecord>;
+	const id = typeof candidate.id === 'string' && candidate.id ? candidate.id : null;
+	const createdAt =
+		typeof candidate.createdAt === 'string' && !Number.isNaN(Date.parse(candidate.createdAt))
+			? candidate.createdAt
+			: new Date().toISOString();
+
+	if (!id) return null;
+
+	return {
+		id,
+		createdAt,
+		result: isResult(candidate.result) ? candidate.result : 'win',
+		youId: typeof candidate.youId === 'string' && fighterById.has(candidate.youId) ? candidate.youId : defaultYouId,
+		opponentId:
+			typeof candidate.opponentId === 'string' && fighterById.has(candidate.opponentId)
+				? candidate.opponentId
+				: defaultOpponentId,
+		stage: isStage(candidate.stage) ? candidate.stage : 'other',
+		items: normalizeBoolean(candidate.items),
+		smashMeter: normalizeBoolean(candidate.smashMeter),
+		hazards: normalizeBoolean(candidate.hazards),
+		eliteSmash: normalizeBoolean(candidate.eliteSmash),
+		satisfaction:
+			typeof candidate.satisfaction === 'number'
+				? Math.min(5, Math.max(1, Math.round(candidate.satisfaction)))
+				: 3,
+		toxic: normalizeBoolean(candidate.toxic),
+		lossReasons: normalizeLossReasons(candidate.lossReasons)
+	};
+}
+
+export function parseMatchRecords(raw: string | null) {
+	if (!raw) return [];
+
+	try {
+		const parsed = JSON.parse(raw);
+		if (!Array.isArray(parsed)) return [];
+
+		return parsed.map(normalizeMatchRecord).filter((record): record is MatchRecord => Boolean(record));
+	} catch {
+		return [];
+	}
+}
+
+export function normalizeFormState(value: unknown): FormState {
+	if (!value || typeof value !== 'object') return { ...defaultForm };
+
+	const candidate = value as Partial<FormState>;
+
+	return {
+		result: isResult(candidate.result) ? candidate.result : defaultForm.result,
+		youId: typeof candidate.youId === 'string' && fighterById.has(candidate.youId) ? candidate.youId : defaultForm.youId,
+		opponentId:
+			typeof candidate.opponentId === 'string' && fighterById.has(candidate.opponentId)
+				? candidate.opponentId
+				: defaultForm.opponentId,
+		stage: isStage(candidate.stage) ? candidate.stage : defaultForm.stage,
+		items: normalizeBoolean(candidate.items, defaultForm.items),
+		smashMeter: normalizeBoolean(candidate.smashMeter, defaultForm.smashMeter),
+		hazards: normalizeBoolean(candidate.hazards, defaultForm.hazards),
+		eliteSmash: normalizeBoolean(candidate.eliteSmash, defaultForm.eliteSmash),
+		satisfaction:
+			typeof candidate.satisfaction === 'number'
+				? Math.min(5, Math.max(1, Math.round(candidate.satisfaction)))
+				: defaultForm.satisfaction,
+		toxic: normalizeBoolean(candidate.toxic, defaultForm.toxic),
+		lossReasons: normalizeLossReasons(candidate.lossReasons)
+	};
+}
+
 export function fighterName(id: string) {
 	return fighterById.get(id)?.name ?? 'Unknown';
 }

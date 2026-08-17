@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
+	import Header from '$lib/Header.svelte';
 	import {
 		RECORDS_KEY,
 		fighters,
 		filterRecords,
 		fighterName,
 		groupByFighter,
+		parseMatchRecords,
 		summaryByResult,
 		type MatchRecord,
 		type ResultFilter
@@ -19,6 +21,7 @@
 	let selectedRecordId = $state<string | null>(null);
 	let editMode = $state(false);
 	let draft = $state<MatchRecord | null>(null);
+	let saveToastVisible = $state(false);
 
 	const filteredRecords = $derived.by(() =>
 		filterRecords(records, { result: selectedResult, fighterId: selectedFighter })
@@ -98,11 +101,18 @@
 
 		try {
 			const storedRecords = localStorage.getItem(RECORDS_KEY);
-			if (storedRecords) {
-				records = JSON.parse(storedRecords);
-			}
+			if (storedRecords) records = parseMatchRecords(storedRecords);
 		} catch {
 			records = [];
+		}
+
+		const url = new URL(window.location.href);
+		if (url.searchParams.get('saved') === '1') {
+			saveToastVisible = true;
+			window.history.replaceState({}, '', '/stats');
+			window.setTimeout(() => {
+				saveToastVisible = false;
+			}, 1800);
 		}
 
 		hydrated = true;
@@ -110,433 +120,459 @@
 </script>
 
 <svelte:head>
-	<title>Smash Log Stats</title>
+	<title>Smash Log History</title>
 	<meta name="description" content="Local Smash Log stats, filters, and history." />
 </svelte:head>
 
-<div class="min-h-dvh bg-[#050505] text-white">
-	<div class="mx-auto flex min-h-dvh w-full max-w-[460px] flex-col px-1 pb-4 pt-1">
-		<header class="border border-white/10 bg-black px-2 py-2">
-			<div class="flex items-center justify-between gap-2">
-				<div class="min-w-0">
-					<p class="text-[10px] font-black uppercase tracking-[0.45em] text-zinc-500">Local Stats</p>
-					<h1 class="text-[1.7rem] font-black tracking-[-0.07em] text-white">HISTORY</h1>
+<Header active="history" />
+
+<main class="flex-1 overflow-y-auto px-3 pt-3 pb-4">
+			<section class="mb-2.5 grid grid-cols-2 gap-px rounded-2xl border-[1.5px] border-[#2a2a38] bg-[#111119] p-px">
+				<div class="rounded-[14px] bg-[#111119] px-3 py-3">
+					<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Total Wins</p>
+					<p class="mt-1 text-3xl font-black text-[#18d17f]">{overallSummary.wins}</p>
 				</div>
-
-				<a
-					href="/"
-					class="border border-white/10 bg-[#0b0b0b] px-3 py-2 text-[0.75rem] font-black uppercase tracking-[0.2em] text-zinc-300"
-				>
-					Back
-				</a>
-			</div>
-		</header>
-
-		<section class="mt-1 grid grid-cols-2 gap-px bg-white/10 p-px">
-			<div class="bg-[#0b0b0b] px-3 py-3">
-				<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Total Wins</p>
-				<p class="mt-1 text-3xl font-black text-emerald-400">{overallSummary.wins}</p>
-			</div>
-			<div class="bg-[#0b0b0b] px-3 py-3">
-				<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Total Losses</p>
-				<p class="mt-1 text-3xl font-black text-red-500">{overallSummary.losses}</p>
-			</div>
-			<div class="bg-[#0b0b0b] px-3 py-3">
-				<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Matches</p>
-				<p class="mt-1 text-3xl font-black text-white">{overallSummary.total}</p>
-			</div>
-			<div class="bg-[#0b0b0b] px-3 py-3">
-				<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Win Rate</p>
-				<p class="mt-1 text-3xl font-black text-white">
-					{Math.round(overallSummary.winRate * 100)}%
-				</p>
-			</div>
-		</section>
-
-		<section class="mt-1 border border-white/10 bg-[#0b0b0b] px-2 py-2">
-			<div class="grid grid-cols-3 gap-px bg-white/10 p-px">
-				{#each [
-					{ id: 'all', label: 'All' },
-					{ id: 'win', label: 'Wins' },
-					{ id: 'loss', label: 'Losses' }
-				] as option}
-					<button
-						type="button"
-						class={`h-10 border-0 px-2 text-[0.75rem] font-black uppercase tracking-[0.14em] ${
-							selectedResult === option.id ? 'bg-white text-black' : 'bg-[#111111] text-zinc-300'
-						}`}
-						onclick={() => {
-							selectedResult = option.id as ResultFilter;
-						}}
-					>
-						{option.label}
-					</button>
-				{/each}
-			</div>
-
-			<label class="mt-2 block">
-				<span class="mb-1 block text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">
-					Character
-				</span>
-				<select
-					bind:value={selectedFighter}
-					class="w-full border border-white/10 bg-[#111111] px-3 py-2.5 text-sm font-bold text-white outline-none"
-				>
-					<option value="all">All fighters</option>
-					{#each fighters as fighter}
-						<option value={fighter.id}>{fighter.name}</option>
-					{/each}
-				</select>
-			</label>
-		</section>
-
-		<section class="mt-1 border border-white/10 bg-[#0b0b0b] px-2 py-2">
-			<div class="flex items-center justify-between">
-				<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Filtered Rate</p>
-				<p class="text-[0.7rem] font-bold text-zinc-500">{filteredSummary.total} matches</p>
-			</div>
-			<p class="mt-1 text-3xl font-black text-white">{Math.round(filteredSummary.winRate * 100)}%</p>
-			<p class="mt-1 text-xs font-medium text-zinc-500">Win rate for the current filter set.</p>
-		</section>
-
-		<section class="mt-1 border border-white/10 bg-[#0b0b0b] px-2 py-2">
-			<div class="flex items-center justify-between">
-				<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">By Character</p>
-				<p class="text-[0.7rem] font-bold text-zinc-500">Historical</p>
-			</div>
-
-			<div class="mt-2 space-y-px bg-white/10 p-px">
-				{#if fighterBreakdown.length}
-					{#each fighterBreakdown as entry}
-						<div class="flex items-center justify-between gap-3 bg-[#111111] px-3 py-2">
-							<div class="min-w-0">
-								<p class="truncate text-sm font-black text-white">{entry.fighter.name}</p>
-								<p class="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-zinc-500">
-									{entry.wins}W / {entry.losses}L
-								</p>
-							</div>
-							<div class="text-right">
-								<p class="text-sm font-black text-white">{Math.round(entry.winRate * 100)}%</p>
-								<p class="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-zinc-500">
-									{entry.total} matches
-								</p>
-							</div>
-						</div>
-					{/each}
-				{:else}
-					<div class="bg-[#111111] px-3 py-3 text-sm text-zinc-500">
-						No character data for the current filter.
-					</div>
-				{/if}
-			</div>
-		</section>
-
-		<section class="mt-1 border border-white/10 bg-[#0b0b0b] px-2 py-2">
-			<div class="flex items-center justify-between">
-				<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Matches</p>
-				<p class="text-[0.7rem] font-bold text-zinc-500">{filteredRecords.length} shown</p>
-			</div>
-
-			<div class="mt-2 space-y-px bg-white/10 p-px">
-				{#if filteredRecords.length}
-					{#each filteredRecords as record}
-						<button
-							type="button"
-							class="grid w-full grid-cols-[auto_1fr_auto] items-stretch gap-2 bg-[#111111] px-3 py-2 text-left cursor-pointer touch-manipulation active:bg-[#1a1a1a]"
-							aria-label={`Open match details for ${fighterName(record.youId)} versus ${fighterName(record.opponentId)}`}
-							onclick={(event) => {
-								event.preventDefault();
-								openRecord(record);
-							}}
-						>
-							<div
-								class={`text-sm font-black uppercase tracking-[0.18em] ${
-									record.result === 'win' ? 'text-emerald-400' : 'text-red-500'
-								}`}
-							>
-								{record.result}
-							</div>
-							<div class="min-w-0">
-								<p class="truncate text-sm font-bold text-white">
-									{fighterName(record.youId)} vs {fighterName(record.opponentId)}
-								</p>
-								<p class="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-zinc-500">
-									{record.stage.replaceAll('-', ' ')} · {formatDate(record.createdAt)}
-								</p>
-							</div>
-							<div class="text-right">
-								<p class="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-zinc-500">Sat.</p>
-								<p class="text-sm font-black text-white">{record.satisfaction}/5</p>
-							</div>
-						</button>
-					{/each}
-				{:else}
-					<div class="bg-[#111111] px-3 py-4 text-sm text-zinc-500">
-						No matches found for this filter.
-					</div>
-				{/if}
-			</div>
-		</section>
-
-		{#if !hydrated}
-			<div class="mt-2 text-xs font-medium text-zinc-500">Loading local data…</div>
-		{/if}
-	</div>
-
-	{#if selectedRecord}
-		<button
-			type="button"
-			class="fixed inset-0 z-40 bg-black/80"
-			onclick={closeRecord}
-			aria-label="Close match details"
-		></button>
-		<div class="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-[460px] border border-white/10 bg-black p-3">
-			<div class="mx-auto mb-2 h-1 w-20 bg-white/15"></div>
-			<div class="flex items-start justify-between gap-3">
-				<div>
-					<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Match</p>
-					<h2 class="mt-1 text-xl font-black text-white">
-						{fighterName(selectedRecord.youId)} vs {fighterName(selectedRecord.opponentId)}
-					</h2>
+				<div class="rounded-[14px] bg-[#111119] px-3 py-3">
+					<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Total Losses</p>
+					<p class="mt-1 text-3xl font-black text-[#e8192c]">{overallSummary.losses}</p>
 				</div>
-				<div class="flex items-center gap-2">
-					<button
-						type="button"
-						class="border border-white/10 bg-[#101010] px-3 py-2 text-[0.7rem] font-black uppercase tracking-[0.2em] text-zinc-300"
-						onclick={() => {
-							editMode = !editMode;
-						}}
-					>
-						{editMode ? 'Viewing' : 'Edit'}
-					</button>
-					<button
-						type="button"
-						class="border border-red-500/50 bg-red-500/10 px-3 py-2 text-[0.7rem] font-black uppercase tracking-[0.2em] text-red-300"
-						onclick={deleteSelectedRecord}
-						aria-label="Delete match entry"
-					>
-						Delete
-					</button>
-					<button
-						type="button"
-						class="grid h-10 w-10 place-items-center border border-white/10 bg-[#101010] text-xl text-zinc-300"
-						onclick={closeRecord}
-						aria-label="Close match details"
-					>
-						×
-					</button>
+				<div class="rounded-[14px] bg-[#111119] px-3 py-3">
+					<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Matches</p>
+					<p class="mt-1 text-3xl font-black text-white">{overallSummary.total}</p>
 				</div>
-			</div>
+				<div class="rounded-[14px] bg-[#111119] px-3 py-3">
+					<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Win Rate</p>
+					<p class="mt-1 text-3xl font-black text-white">{Math.round(overallSummary.winRate * 100)}%</p>
+				</div>
+			</section>
 
-			{#if editMode && draft}
-				<div class="mt-3 space-y-2">
-					<div class="grid grid-cols-2 gap-px bg-white/10 p-px">
-						<button
-							type="button"
-							class={`h-11 border-0 px-3 text-left text-sm font-black uppercase tracking-[0.14em] ${
-								draft.result === 'win' ? 'bg-emerald-500 text-white' : 'bg-[#111111] text-zinc-300'
-							}`}
-							onclick={() => updateDraft({ result: 'win' })}
-						>
-							Won
-						</button>
-						<button
-							type="button"
-							class={`h-11 border-0 px-3 text-left text-sm font-black uppercase tracking-[0.14em] ${
-								draft.result === 'loss' ? 'bg-red-500 text-white' : 'bg-[#111111] text-zinc-300'
-							}`}
-							onclick={() => updateDraft({ result: 'loss' })}
-						>
-							Lost
-						</button>
+			<section class="mb-2.5 flex flex-row overflow-hidden rounded-2xl border-[1.5px] border-[#2a2a38] bg-[#111119]">
+				<div class="relative flex w-7 shrink-0 items-center justify-center border-r border-[#2a2a38] bg-[#12131c]">
+					<div class="absolute whitespace-nowrap text-[11px] font-extrabold uppercase tracking-[0.12em]"
+						style="top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-90deg); color: rgb(255, 213, 0);"
+					>
+						Filters
 					</div>
-
-					<div class="grid grid-cols-2 gap-2">
-						<label class="block">
-							<span class="mb-1 block text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">
-								Me
-							</span>
-							<select
-								bind:value={draft.youId}
-								class="w-full border border-white/10 bg-[#111111] px-3 py-2.5 text-sm font-bold text-white outline-none"
-							>
-								{#each fighters as fighter}
-									<option value={fighter.id}>{fighter.name}</option>
-								{/each}
-							</select>
-						</label>
-
-						<label class="block">
-							<span class="mb-1 block text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">
-								Opponent
-							</span>
-							<select
-								bind:value={draft.opponentId}
-								class="w-full border border-white/10 bg-[#111111] px-3 py-2.5 text-sm font-bold text-white outline-none"
-							>
-								{#each fighters as fighter}
-									<option value={fighter.id}>{fighter.name}</option>
-								{/each}
-							</select>
-						</label>
-					</div>
-
-					<div class="grid grid-cols-3 gap-px bg-white/10 p-px">
+				</div>
+				<div class="min-w-0 flex-1 p-3 pb-3.5">
+					<div class="grid grid-cols-3 gap-1.5 rounded-[10px] border-[1.5px] border-[#2a2a38] bg-[#111119] p-[3px]">
 						{#each [
-							{ id: 'final-destination', label: 'Final Destination' },
-							{ id: 'battlefield', label: 'Battlefield' },
-							{ id: 'other', label: 'Other' }
-						] as stageOption}
+							{ id: 'all', label: 'All' },
+							{ id: 'win', label: 'Wins' },
+							{ id: 'loss', label: 'Losses' }
+						] as option}
 							<button
 								type="button"
-								class={`h-11 border-0 px-2 text-[0.75rem] font-bold uppercase tracking-[0.14em] ${
-									draft.stage === stageOption.id ? 'bg-red-500 text-white' : 'bg-[#111111] text-zinc-300'
-								}`}
-								onclick={() => updateDraft({ stage: stageOption.id as MatchRecord['stage'] })}
-							>
-								{stageOption.label}
-							</button>
-						{/each}
-					</div>
-
-					<div class="grid grid-cols-2 gap-px bg-white/10 p-px">
-						{#each [
-							{ key: 'items', label: 'Items' },
-							{ key: 'smashMeter', label: 'Smash Meter' },
-							{ key: 'hazards', label: 'Hazards' },
-							{ key: 'eliteSmash', label: 'Elite Smash' }
-						] as toggle}
-							<button
-								type="button"
-								class={`flex h-11 items-center justify-between border-0 px-3 text-left ${
-									draft[toggle.key as 'items' | 'smashMeter' | 'hazards' | 'eliteSmash']
-										? 'bg-white text-black'
-										: 'bg-[#111111] text-zinc-300'
+								class={`rounded-lg py-[7px] px-1 text-sm font-bold uppercase tracking-[0.06em] ${
+									selectedResult === option.id ? 'bg-[#e8192c] text-white' : 'bg-transparent text-[#555]'
 								}`}
 								onclick={() => {
-									const key = toggle.key as 'items' | 'smashMeter' | 'hazards' | 'eliteSmash';
-									const currentDraft = draft;
-									if (!currentDraft) return;
-									draft = { ...currentDraft, [key]: !currentDraft[key] } as MatchRecord;
+									selectedResult = option.id as ResultFilter;
 								}}
 							>
-								<span class="text-sm font-black uppercase tracking-[0.12em]">{toggle.label}</span>
-								<span class="text-lg">{draft[toggle.key as 'items' | 'smashMeter' | 'hazards' | 'eliteSmash'] ? '●' : '○'}</span>
+								{option.label}
 							</button>
 						{/each}
 					</div>
 
-					<div class="grid grid-cols-2 gap-px bg-white/10 p-px">
-						<button
-							type="button"
-							class={`border-0 px-3 py-2 text-left ${
-								!draft.toxic ? 'bg-red-500 text-white' : 'bg-[#111111] text-zinc-400'
-							}`}
-							onclick={() => updateDraft({ toxic: false })}
+					<label class="mt-3 block">
+						<span class="mb-1 block text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">
+							Character
+						</span>
+						<select
+							bind:value={selectedFighter}
+							class="w-full rounded-[10px] border-[1.5px] border-[#2a2a38] bg-[#111119] px-3 py-2.5 text-sm font-bold text-white outline-none"
 						>
-							<p class="text-[10px] font-black uppercase tracking-[0.35em]">Toxic</p>
-							<p class="mt-1 text-lg font-black">No</p>
-						</button>
-						<button
-							type="button"
-							class={`border-0 px-3 py-2 text-left ${
-								draft.toxic ? 'bg-red-500 text-white' : 'bg-[#111111] text-zinc-400'
-							}`}
-							onclick={() => updateDraft({ toxic: true })}
-						>
-							<p class="text-[10px] font-black uppercase tracking-[0.35em]">Toxic</p>
-							<p class="mt-1 text-lg font-black">Yes</p>
-						</button>
-					</div>
-
-					<button
-						type="button"
-						class="w-full border border-emerald-500 bg-emerald-500 px-4 py-3 text-base font-black text-black"
-						onclick={saveDraft}
-					>
-						Save Changes
-					</button>
+							<option value="all">All fighters</option>
+							{#each fighters as fighter}
+								<option value={fighter.id}>{fighter.name}</option>
+							{/each}
+						</select>
+					</label>
 				</div>
-			{:else}
-				<div class="mt-3 space-y-2 text-sm">
-					<div class="grid grid-cols-2 gap-px bg-white/10 p-px">
-						<div class="bg-[#111111] px-3 py-2">
-							<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Result</p>
-							<p class={`mt-1 text-lg font-black ${selectedRecord.result === 'win' ? 'text-emerald-400' : 'text-red-500'}`}>
-								{selectedRecord.result === 'win' ? 'Won' : 'Lost'}
-							</p>
-						</div>
-						<div class="bg-[#111111] px-3 py-2">
-							<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Stage</p>
-							<p class="mt-1 text-lg font-black text-white">{selectedRecord.stage.replaceAll('-', ' ')}</p>
-						</div>
-					</div>
+			</section>
 
-					<div class="grid grid-cols-2 gap-px bg-white/10 p-px">
-						<div class="bg-[#111111] px-3 py-2">
-							<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Me</p>
-							<p class="mt-1 text-lg font-black text-white">{fighterName(selectedRecord.youId)}</p>
-						</div>
-						<div class="bg-[#111111] px-3 py-2">
-							<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Opponent</p>
-							<p class="mt-1 text-lg font-black text-white">{fighterName(selectedRecord.opponentId)}</p>
-						</div>
-					</div>
-
-					<div class="grid grid-cols-2 gap-px bg-white/10 p-px">
-						<div class="bg-[#111111] px-3 py-2">
-							<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Saved</p>
-							<p class="mt-1 text-sm font-bold text-white">{formatDate(selectedRecord.createdAt)}</p>
-						</div>
-						<div class="bg-[#111111] px-3 py-2">
-							<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Satisfaction</p>
-							<p class="mt-1 text-lg font-black text-white">{selectedRecord.satisfaction}/5</p>
-						</div>
-					</div>
-
-					<div class="grid grid-cols-2 gap-px bg-white/10 p-px">
-						<div class="bg-[#111111] px-3 py-2">
-							<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Items</p>
-							<p class="mt-1 text-lg font-black text-white">{selectedRecord.items ? 'On' : 'Off'}</p>
-						</div>
-						<div class="bg-[#111111] px-3 py-2">
-							<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Smash Meter</p>
-							<p class="mt-1 text-lg font-black text-white">{selectedRecord.smashMeter ? 'On' : 'Off'}</p>
-						</div>
-						<div class="bg-[#111111] px-3 py-2">
-							<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Hazards</p>
-							<p class="mt-1 text-lg font-black text-white">{selectedRecord.hazards ? 'On' : 'Off'}</p>
-						</div>
-						<div class="bg-[#111111] px-3 py-2">
-							<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Elite Smash</p>
-							<p class="mt-1 text-lg font-black text-white">{selectedRecord.eliteSmash ? 'Yes' : 'No'}</p>
-						</div>
-					</div>
-
-					<div class="grid grid-cols-2 gap-px bg-white/10 p-px">
-						<div class="bg-[#111111] px-3 py-2">
-							<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Toxic</p>
-							<p class="mt-1 text-lg font-black text-white">{selectedRecord.toxic ? 'Yes' : 'No'}</p>
-						</div>
-						<div class="bg-[#111111] px-3 py-2">
-							<p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Loss reasons</p>
-							<p class="mt-1 text-sm font-bold text-white">
-								{selectedRecord.lossReasons.length ? selectedRecord.lossReasons.join(', ') : 'None'}
-							</p>
-						</div>
-					</div>
-
-					<button
-						type="button"
-						class="w-full border border-white/10 bg-[#111111] px-4 py-3 text-base font-black text-white"
-						onclick={() => {
-							editMode = true;
-						}}
+			<section class="mb-2.5 flex flex-row overflow-hidden rounded-2xl border-[1.5px] border-[#2a2a38] bg-[#111119]">
+				<div class="relative flex w-7 shrink-0 items-center justify-center border-r border-[#2a2a38] bg-[#12131c]">
+					<div class="absolute whitespace-nowrap text-[11px] font-extrabold uppercase tracking-[0.12em]"
+						style="top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-90deg); color: rgb(0, 201, 212);"
 					>
-						Edit Match
-					</button>
+						Breakdown
+					</div>
 				</div>
+				<div class="min-w-0 flex-1 p-3 pb-3.5">
+					<div class="flex items-center justify-between">
+						<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Filtered Rate</p>
+						<p class="text-[0.7rem] font-bold text-[#5d6175]">{filteredSummary.total} matches</p>
+					</div>
+					<p class="mt-1 text-3xl font-black text-white">{Math.round(filteredSummary.winRate * 100)}%</p>
+					<p class="mt-1 text-xs font-medium text-[#5d6175]">Win rate for the current filter set.</p>
+
+					<div class="mt-4 h-px bg-[#20222e]"></div>
+
+					<div class="mt-4 flex items-center justify-between">
+						<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">By Character</p>
+						<p class="text-[0.7rem] font-bold text-[#5d6175]">Historical</p>
+					</div>
+
+					<div class="mt-2 space-y-2">
+						{#if fighterBreakdown.length}
+							{#each fighterBreakdown as entry}
+								<div class="overflow-hidden rounded-[14px] border-[1.5px] border-[#2a2a38] bg-[#111119]">
+									<div class="flex">
+										<div class={`w-1.5 ${entry.winRate >= 0.5 ? 'bg-[#18d17f]' : 'bg-[#e8192c]'}`}></div>
+										<div class="flex-1 px-3 py-2.5">
+											<div class="flex items-center justify-between gap-3">
+												<div class="min-w-0">
+													<p class="truncate text-sm font-black text-white">{entry.fighter.name}</p>
+													<p class="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-[#5d6175]">
+														{entry.wins}W / {entry.losses}L
+													</p>
+												</div>
+												<div class="text-right">
+													<p class={`text-sm font-black ${entry.winRate >= 0.5 ? 'text-[#18d17f]' : 'text-[#e8192c]'}`}>
+														{Math.round(entry.winRate * 100)}%
+													</p>
+													<p class="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-[#5d6175]">
+														{entry.total} matches
+													</p>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							{/each}
+						{:else}
+							<div class="rounded-[14px] border-[1.5px] border-[#2a2a38] bg-[#111119] px-3 py-3 text-sm text-[#5d6175]">
+								No character data for the current filter.
+							</div>
+						{/if}
+					</div>
+				</div>
+			</section>
+
+			<section class="mb-2.5 flex flex-row overflow-hidden rounded-2xl border-[1.5px] border-[#2a2a38] bg-[#111119]">
+				<div class="relative flex w-7 shrink-0 items-center justify-center border-r border-[#2a2a38] bg-[#12131c]">
+					<div class="absolute whitespace-nowrap text-[11px] font-extrabold uppercase tracking-[0.12em]"
+						style="top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-90deg); color: rgb(0, 201, 212);"
+					>
+						Matches
+					</div>
+				</div>
+				<div class="min-w-0 flex-1 p-3 pb-3.5">
+					<div class="flex items-center justify-between">
+						<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">History</p>
+						<p class="text-[0.7rem] font-bold text-[#5d6175]">{filteredRecords.length} shown</p>
+					</div>
+
+					<div class="mt-2 space-y-2">
+						{#if filteredRecords.length}
+							{#each filteredRecords as record}
+								<button
+									type="button"
+									class="grid w-full grid-cols-[auto_1fr_auto] items-stretch gap-2 rounded-[14px] border-[1.5px] border-[#2a2a38] bg-[#111119] px-3 py-2.5 text-left cursor-pointer touch-manipulation active:bg-[#151722]"
+									aria-label={`Open match details for ${fighterName(record.youId)} versus ${fighterName(record.opponentId)}`}
+									onclick={(event) => {
+										event.preventDefault();
+										openRecord(record);
+									}}
+								>
+									<div class={`flex min-w-[3.25rem] items-center justify-center rounded-[10px] px-2 py-1 text-[0.72rem] font-black uppercase tracking-[0.14em] ${
+										record.result === 'win' ? 'bg-[#18d17f] text-white' : 'bg-[#e8192c] text-white'
+									}`}>
+										{record.result === 'win' ? '✓' : '✕'}
+									</div>
+									<div class="min-w-0">
+										<p class="truncate text-sm font-bold text-white">
+											{fighterName(record.youId)} vs {fighterName(record.opponentId)}
+										</p>
+										<p class="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-[#5d6175]">
+											{record.stage.replaceAll('-', ' ')} · {formatDate(record.createdAt)}
+										</p>
+									</div>
+									<div class="text-right">
+										<p class="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-[#5d6175]">Sat.</p>
+										<p class="text-sm font-black text-white">{record.satisfaction}/5</p>
+									</div>
+								</button>
+							{/each}
+						{:else}
+							<div class="rounded-[14px] border-[1.5px] border-[#2a2a38] bg-[#111119] px-3 py-4 text-sm text-[#5d6175]">
+								No matches found for this filter.
+							</div>
+						{/if}
+					</div>
+				</div>
+			</section>
+
+			{#if !hydrated}
+				<div class="text-xs font-medium text-[#5d6175]">Loading local data…</div>
 			{/if}
-		</div>
-	{/if}
-</div>
+</main>
+
+{#if selectedRecord}
+			<button
+				type="button"
+				class="fixed inset-0 z-40 bg-black/80"
+				onclick={closeRecord}
+				aria-label="Close match details"
+			></button>
+			<div class="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-[430px] rounded-t-[20px] border-t border-[#2a2a38] bg-[#0d0d16] p-4">
+				<div class="mx-auto mb-3 h-1 w-16 rounded-full bg-white/15"></div>
+				<div class="flex items-start justify-between gap-3">
+					<div>
+						<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Match</p>
+						<h2 class="mt-1 text-xl font-black text-white">
+							{fighterName(selectedRecord.youId)} vs {fighterName(selectedRecord.opponentId)}
+						</h2>
+					</div>
+					<div class="flex items-center gap-2">
+						<button
+							type="button"
+							class="rounded-[10px] border-[1.5px] border-[#2a2a38] bg-[#111119] px-3 py-2 text-[0.7rem] font-black uppercase tracking-[0.2em] text-[#c7c7d3]"
+							onclick={() => {
+								editMode = !editMode;
+							}}
+						>
+							{editMode ? 'Viewing' : 'Edit'}
+						</button>
+						<button
+							type="button"
+							class="rounded-[10px] border-[1.5px] border-[#e8192c]/50 bg-[#e8192c]/10 px-3 py-2 text-[0.7rem] font-black uppercase tracking-[0.2em] text-[#ff9aa3]"
+							onclick={deleteSelectedRecord}
+							aria-label="Delete match entry"
+						>
+							Delete
+						</button>
+						<button
+							type="button"
+							class="grid h-10 w-10 place-items-center rounded-[10px] border-[1.5px] border-[#2a2a38] bg-[#111119] text-xl text-[#c7c7d3]"
+							onclick={closeRecord}
+							aria-label="Close match details"
+						>
+							×
+						</button>
+					</div>
+				</div>
+
+				{#if editMode && draft}
+					<div class="mt-3 space-y-2">
+						<div class="grid grid-cols-2 gap-px rounded-[10px] border-[1.5px] border-[#2a2a38] bg-[#111119] p-[3px]">
+							<button
+								type="button"
+								class={`h-11 rounded-lg border-0 px-3 text-left text-sm font-black uppercase tracking-[0.14em] ${
+									draft.result === 'win' ? 'bg-[#18d17f] text-white' : 'bg-[#111119] text-[#8888a0]'
+								}`}
+								onclick={() => updateDraft({ result: 'win' })}
+							>
+								Won
+							</button>
+							<button
+								type="button"
+								class={`h-11 rounded-lg border-0 px-3 text-left text-sm font-black uppercase tracking-[0.14em] ${
+									draft.result === 'loss' ? 'bg-[#e8192c] text-white' : 'bg-[#111119] text-[#8888a0]'
+								}`}
+								onclick={() => updateDraft({ result: 'loss' })}
+							>
+								Lost
+							</button>
+						</div>
+
+						<div class="grid grid-cols-2 gap-2">
+							<label class="block">
+								<span class="mb-1 block text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">
+									Me
+								</span>
+								<select
+									bind:value={draft.youId}
+									class="w-full rounded-[10px] border-[1.5px] border-[#2a2a38] bg-[#111119] px-3 py-2.5 text-sm font-bold text-white outline-none"
+								>
+									{#each fighters as fighter}
+										<option value={fighter.id}>{fighter.name}</option>
+									{/each}
+								</select>
+							</label>
+
+							<label class="block">
+								<span class="mb-1 block text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">
+									Opponent
+								</span>
+								<select
+									bind:value={draft.opponentId}
+									class="w-full rounded-[10px] border-[1.5px] border-[#2a2a38] bg-[#111119] px-3 py-2.5 text-sm font-bold text-white outline-none"
+								>
+									{#each fighters as fighter}
+										<option value={fighter.id}>{fighter.name}</option>
+									{/each}
+								</select>
+							</label>
+						</div>
+
+						<div class="grid grid-cols-3 gap-1.5 rounded-[10px] border-[1.5px] border-[#2a2a38] bg-[#111119] p-[3px]">
+							{#each [
+								{ id: 'final-destination', label: 'Final Destination' },
+								{ id: 'battlefield', label: 'Battlefield' },
+								{ id: 'other', label: 'Other' }
+							] as stageOption}
+								<button
+									type="button"
+									class={`rounded-[9px] border-[1.5px] px-1 py-[9px] text-[12px] font-bold uppercase leading-tight ${
+										draft.stage === stageOption.id ? 'bg-[#e8192c] text-white border-[#e8192c]' : 'bg-[#111119] text-[#666] border-[#2a2a38]'
+									}`}
+									onclick={() => updateDraft({ stage: stageOption.id as MatchRecord['stage'] })}
+								>
+									{stageOption.label}
+								</button>
+							{/each}
+						</div>
+
+						<div class="grid grid-cols-2 gap-2">
+							{#each [
+								{ key: 'items', label: 'Items' },
+								{ key: 'smashMeter', label: 'Smash Meter' },
+								{ key: 'hazards', label: 'Hazards' },
+								{ key: 'eliteSmash', label: 'Elite Smash' }
+							] as toggle}
+								<button
+									type="button"
+									class={`flex h-11 items-center justify-between rounded-[10px] border-[1.5px] px-3 text-left ${
+										draft[toggle.key as 'items' | 'smashMeter' | 'hazards' | 'eliteSmash']
+											? 'border-[#2a2a38] bg-[#18d17f] text-white'
+											: 'border-[#2a2a38] bg-[#111119] text-[#c7c7d3]'
+									}`}
+									onclick={() => {
+										const key = toggle.key as 'items' | 'smashMeter' | 'hazards' | 'eliteSmash';
+										const currentDraft = draft;
+										if (!currentDraft) return;
+										draft = { ...currentDraft, [key]: !currentDraft[key] } as MatchRecord;
+									}}
+								>
+									<span class="text-sm font-black uppercase tracking-[0.12em]">{toggle.label}</span>
+									<span class="text-lg">{draft[toggle.key as 'items' | 'smashMeter' | 'hazards' | 'eliteSmash'] ? '●' : '○'}</span>
+								</button>
+							{/each}
+						</div>
+
+						<div class="grid grid-cols-2 gap-px rounded-[10px] border-[1.5px] border-[#2a2a38] bg-[#111119] p-[3px]">
+							<button
+								type="button"
+								class={`rounded-lg border-0 px-3 py-2 text-left ${
+									!draft.toxic ? 'bg-[#e8192c] text-white' : 'bg-[#111119] text-[#8888a0]'
+								}`}
+								onclick={() => updateDraft({ toxic: false })}
+							>
+								<p class="text-[10px] font-black uppercase tracking-[0.35em]">Toxic</p>
+								<p class="mt-1 text-lg font-black">No</p>
+							</button>
+							<button
+								type="button"
+								class={`rounded-lg border-0 px-3 py-2 text-left ${
+									draft.toxic ? 'bg-[#18d17f] text-white' : 'bg-[#111119] text-[#8888a0]'
+								}`}
+								onclick={() => updateDraft({ toxic: true })}
+							>
+								<p class="text-[10px] font-black uppercase tracking-[0.35em]">Toxic</p>
+								<p class="mt-1 text-lg font-black">Yes</p>
+							</button>
+						</div>
+
+						<button
+							type="button"
+							class="w-full rounded-[14px] border border-[#0fd18a] bg-[#0fd18a] px-4 py-3 text-base font-black text-black"
+							onclick={saveDraft}
+						>
+							Save Changes
+						</button>
+					</div>
+				{:else}
+					<div class="mt-3 space-y-2 text-sm">
+						<div class="grid grid-cols-2 gap-px rounded-[10px] border-[1.5px] border-[#2a2a38] bg-[#111119] p-[3px]">
+							<div class="rounded-lg bg-[#111119] px-3 py-2">
+								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Result</p>
+								<p class={`mt-1 text-lg font-black ${selectedRecord.result === 'win' ? 'text-[#18d17f]' : 'text-[#e8192c]'}`}>
+									{selectedRecord.result === 'win' ? 'Won' : 'Lost'}
+								</p>
+							</div>
+							<div class="rounded-lg bg-[#111119] px-3 py-2">
+								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Stage</p>
+								<p class="mt-1 text-lg font-black text-white">{selectedRecord.stage.replaceAll('-', ' ')}</p>
+							</div>
+						</div>
+
+						<div class="grid grid-cols-2 gap-px rounded-[10px] border-[1.5px] border-[#2a2a38] bg-[#111119] p-[3px]">
+							<div class="rounded-lg bg-[#111119] px-3 py-2">
+								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Me</p>
+								<p class="mt-1 text-lg font-black text-white">{fighterName(selectedRecord.youId)}</p>
+							</div>
+							<div class="rounded-lg bg-[#111119] px-3 py-2">
+								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Opponent</p>
+								<p class="mt-1 text-lg font-black text-white">{fighterName(selectedRecord.opponentId)}</p>
+							</div>
+						</div>
+
+						<div class="grid grid-cols-2 gap-px rounded-[10px] border-[1.5px] border-[#2a2a38] bg-[#111119] p-[3px]">
+							<div class="rounded-lg bg-[#111119] px-3 py-2">
+								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Saved</p>
+								<p class="mt-1 text-sm font-bold text-white">{formatDate(selectedRecord.createdAt)}</p>
+							</div>
+							<div class="rounded-lg bg-[#111119] px-3 py-2">
+								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Satisfaction</p>
+								<p class="mt-1 text-lg font-black text-white">{selectedRecord.satisfaction}/5</p>
+							</div>
+						</div>
+
+						<div class="grid grid-cols-2 gap-px rounded-[10px] border-[1.5px] border-[#2a2a38] bg-[#111119] p-[3px]">
+							<div class="rounded-lg bg-[#111119] px-3 py-2">
+								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Items</p>
+								<p class="mt-1 text-lg font-black text-white">{selectedRecord.items ? 'On' : 'Off'}</p>
+							</div>
+							<div class="rounded-lg bg-[#111119] px-3 py-2">
+								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Smash Meter</p>
+								<p class="mt-1 text-lg font-black text-white">{selectedRecord.smashMeter ? 'On' : 'Off'}</p>
+							</div>
+							<div class="rounded-lg bg-[#111119] px-3 py-2">
+								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Hazards</p>
+								<p class="mt-1 text-lg font-black text-white">{selectedRecord.hazards ? 'On' : 'Off'}</p>
+							</div>
+							<div class="rounded-lg bg-[#111119] px-3 py-2">
+								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Elite Smash</p>
+								<p class="mt-1 text-lg font-black text-white">{selectedRecord.eliteSmash ? 'Yes' : 'No'}</p>
+							</div>
+						</div>
+
+						<div class="grid grid-cols-2 gap-px rounded-[10px] border-[1.5px] border-[#2a2a38] bg-[#111119] p-[3px]">
+							<div class="rounded-lg bg-[#111119] px-3 py-2">
+								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Toxic</p>
+								<p class="mt-1 text-lg font-black text-white">{selectedRecord.toxic ? 'Yes' : 'No'}</p>
+							</div>
+							<div class="rounded-lg bg-[#111119] px-3 py-2">
+								<p class="text-[10px] font-black uppercase tracking-[0.35em] text-[#9c9fb2]">Loss reasons</p>
+								<p class="mt-1 text-sm font-bold text-white">
+									{selectedRecord.lossReasons.length ? selectedRecord.lossReasons.join(', ') : 'None'}
+								</p>
+							</div>
+						</div>
+
+						<button
+							type="button"
+							class="w-full rounded-[14px] border border-[#2a2a38] bg-[#111119] px-4 py-3 text-base font-black text-white"
+							onclick={() => {
+								editMode = true;
+							}}
+						>
+							Edit Match
+						</button>
+					</div>
+				{/if}
+			</div>
+{/if}
+
+		{#if saveToastVisible}
+			<div
+				class="fixed left-1/2 top-20 z-[200] -translate-x-1/2 whitespace-nowrap rounded-[10px] bg-[#0fd18a] px-[18px] py-[9px] text-[15px] font-bold uppercase tracking-[0.06em] text-white shadow-[0_4px_20px_rgba(0,201,122,0.4)]"
+				role="status"
+				aria-live="polite"
+			>
+				✓ Match Saved
+			</div>
+		{/if}

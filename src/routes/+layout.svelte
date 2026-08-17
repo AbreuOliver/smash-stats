@@ -21,4 +21,8 @@
 	<meta name="theme-color" content="#0f172a" />
 	<meta name="apple-mobile-web-app-capable" content="yes" />
 </svelte:head>
-{@render children()}
+<div class="scanlines min-h-dvh bg-[#08080f] text-white">
+	<div class="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col">
+		{@render children()}
+	</div>
+</div>
